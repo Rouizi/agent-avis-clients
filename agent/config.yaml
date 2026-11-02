@@ -1,0 +1,45 @@
+# Configuration de l'agent (exigence F6 : seuils, ton, fréquence paramétrables)
+# Rien de métier n'est codé en dur dans le code Python : tout passe par ce fichier.
+
+llm:
+  model: gpt-4o-mini
+  temperature: 0.7
+  max_tokens: 400
+  prompt_version: v1          # correspond à prompts/v1.yaml
+  prompt_hors_sujet: hors_sujet_v1  # classifieur hors-sujet, prompts/hors_sujet_v1.yaml
+
+pms:
+  base_url: "http://localhost:8000"   # mock PMS (FastAPI)
+  timeout_secondes: 30
+
+seuils:
+  note_tres_negatif: 3        # note <= 3 -> flag "à surveiller" (zone grise #3)
+  similarite_doublon: 0.9     # similarité de texte >= 0.9 -> doublon (zone grise #5)
+  doublon_longueur_min: 25    # sous 25 caractères, pas de test doublon ("Super séjour !" légitime)
+  delai_publication_jours: 14 # limite imposée par Airbnb
+  delai_priorite_jours: 10    # avis de plus de 10 jours -> priorité délai (zone grise #8)
+
+generation:
+  langue_reponse: fr          # toujours français (zone grise #4)
+  max_regenerations: 2        # après rejet humain (zone grise #2)
+  max_retries: 3              # erreurs LLM / API avant file d'erreur (zone grise #7)
+
+# Ton adapté à la note (zone grise #12)
+tons:
+  - note_min: 1
+    note_max: 4
+    ton: "excuse sincère : reconnais le problème mentionné, présente des excuses, sans rien promettre (ni remboursement, ni geste commercial)"
+  - note_min: 5
+    note_max: 6
+    ton: "neutre et professionnel : remercie, reconnais les points mitigés mentionnés"
+  - note_min: 7
+    note_max: 8
+    ton: "chaleureux : remercie et valorise les points positifs mentionnés"
+  - note_min: 9
+    note_max: 10
+    ton: "enthousiaste : remercie chaleureusement et invite à revenir"
+
+planification:
+  frequence: hebdomadaire
+  jour: lundi
+  heure: "08:00"
