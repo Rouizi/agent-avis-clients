@@ -106,7 +106,9 @@ def _traiter(session, avis: Avis, commentaires_connus: list[str]) -> str:
             _log(session, avis.review_id_pms, ActionLog.SIGNALE, Acteur.AGENT, details)
             issue = "signale"
         else:
-            resultat = generer_reponse(avis.note, avis.plateforme.value, avis.texte_avis)
+            # Rejeu après une régénération échouée : l'ancienne réponse reste le contre-exemple
+            resultat = generer_reponse(avis.note, avis.plateforme.value, avis.texte_avis,
+                                       reponse_rejetee=avis.reponse_generee)
             avis.reponse_generee = resultat["reponse"]
             avis.score_confiance = resultat["score_confiance"]
             avis.statut_pipeline = StatutPipeline.EN_VALIDATION
@@ -169,7 +171,7 @@ def run_pipeline(limite: Optional[int] = None) -> dict:
                 resume["vides"] += 1
                 continue
             if limite is not None and traites >= limite:
-                break
+                continue                                # on parcourt la suite : compteurs du résumé exacts
 
             avis = Avis(
                 review_id_pms=r["id"],
@@ -213,14 +215,16 @@ def rejouer_erreurs() -> dict:
 def regenerer(session, avis: Avis) -> bool:
     """
     Appelé par Flask quand le relecteur REJETTE une réponse (zone grise #2).
-    Régénère avec l'ancienne réponse en contre-exemple. Renvoie False si la limite de
-    régénérations est atteinte (ou si la génération échoue) : traitement manuel.
+    Régénère avec l'ancienne réponse en contre-exemple. Renvoie False dans deux cas :
+      - limite de régénérations atteinte : l'avis passe en file "à traiter manuellement" ;
+      - génération en échec : l'avis part en file d'erreur, et reste rejouable.
     """
     _log(session, avis.review_id_pms, ActionLog.REJETE, Acteur.HUMAIN,
          f"Réponse rejetée : {avis.reponse_generee}")
 
     if (not avis.reponse_generee
             or avis.nb_tentatives_regen >= CONFIG["generation"]["max_regenerations"]):
+        avis.statut_pipeline = StatutPipeline.A_TRAITER_MANUELLEMENT
         session.commit()
         return False
 

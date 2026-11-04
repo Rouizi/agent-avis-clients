@@ -20,8 +20,9 @@ DB_URL = f"sqlite:///{Path(__file__).parent / 'agent_internal.db'}"
 
 class StatutPipeline(str, enum.Enum):
     NOUVEAU = "nouveau"
-    GENERE = "généré"
     EN_VALIDATION = "en_validation"
+    A_TRAITER_MANUELLEMENT = "à_traiter_manuellement"  # réponse rejetée 3 fois : l'humain l'écrit lui-même
+    ECARTE = "écarté"  # doublon ou hors-sujet écarté en revue manuelle : aucune réponse publiée
     VALIDE = "validé"
     SYNCHRONISE_PMS = "synchronisé_pms"
 
@@ -44,7 +45,6 @@ class ActionLog(str, enum.Enum):
     VALIDE = "validé"
     REJETE = "rejeté"
     PUBLIE = "publié"
-    ECHEC = "échec"
     ERREUR_FINALE = "erreur_finale"
     SIGNALE = "signalé"
 

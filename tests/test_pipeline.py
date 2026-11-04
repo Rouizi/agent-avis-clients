@@ -77,6 +77,18 @@ def test_avis_vides_ne_comptent_pas_dans_la_limite():
     assert ids_en_base() == [2, 3]
 
 
+def test_limite_atteinte_les_compteurs_restent_exacts():
+    pipeline._recuperer_avis_pms = lambda: [
+        avis_pms(5), avis_pms(4), avis_pms(3), avis_pms_avec_texte(2, ""), avis_pms_avec_texte(1, ""),
+    ]
+
+    resume = pipeline.run_pipeline(limite=1)
+
+    assert resume["generes"] == 1
+    assert resume["vides"] == 2
+    assert ids_en_base() == [5]
+
+
 def test_reprises_comptent_dans_la_limite():
     for identifiant in (101, 102, 103):
         ajouter_avis_en_base(identifiant, statut_pipeline=StatutPipeline.NOUVEAU)

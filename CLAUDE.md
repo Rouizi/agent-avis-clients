@@ -54,7 +54,9 @@ Comment lire l'état d'un avis dans `avis` :
 
 - **À valider :** `statut_pipeline = en_validation` avec une réponse générée.
 - **Revue manuelle :** `en_validation` avec `flag_doublon` ou `flag_hors_sujet`, et `reponse_generee` à NULL (aucune réponse n'est générée pour ces avis).
-- **File d'erreur :** `statut_erreur = en_erreur`, après 3 échecs ; `statut_pipeline` reste `nouveau`.
+- **À traiter manuellement :** `statut_pipeline = à_traiter_manuellement`, après 3 rejets : l'humain écrit lui-même la réponse.
+- **Écarté :** `statut_pipeline = écarté`, doublon ou hors-sujet écarté en revue manuelle : aucune réponse publiée, et l'avis reste `en_attente_evaluation` côté PMS.
+- **File d'erreur :** `statut_erreur = en_erreur`, après 3 échecs ; `statut_pipeline` reste `nouveau`, ou `en_validation` si c'est une régénération qui a échoué. La file de validation doit donc exclure `en_erreur`.
 - **Avis vides :** ni stockés ni traités ; ils sont seulement comptés dans le résumé de chaque run.
 
 Les flags sont indépendants et peuvent coexister. Un avis très négatif reçoit quand même une réponse, avec `flag_surveillance`. Toute publication passe par un humain en V1, sans exception.

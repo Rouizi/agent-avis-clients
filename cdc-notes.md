@@ -109,13 +109,16 @@ project/
 
 ## 6. KPIs de succès
 - Temps moyen de traitement hebdomadaire
-- % d'avis traités automatiquement (auto-publish)
+- % d'avis traités sans intervention supplémentaire (pas d'auto-publication en V1, décision #1)
 - Taux de retouche humaine sur les réponses générées
 - Respect des délais de publication (< 14 jours)
 ## 7. Journal de décisions
 *(à compléter au fil du projet — date, décision prise, raison)*
 
 - **2026-11-04 — Avis écartés en revue manuelle :** un doublon ou un hors-sujet écarté par le relecteur reste sans réponse publiée. Raison : un avis écarté n'a pas à recevoir de réponse.
+- **2026-11-04 — File manuelle :** après 3 rejets, l'avis passe au statut `à_traiter_manuellement` (décision #2). Raison : un avis n'est que dans un seul de ces états, un statut est donc plus simple que des colonnes à combiner.
+- **2026-11-04 — KPI « % automatisé » :** il mesure les avis traités sans intervention supplémentaire (ni régénération, ni flag doublon ou hors-sujet, ni erreur). Il ne mesure pas l'auto-publication, exclue en V1 (décision #1), et ne tient pas compte des retouches.
+- **2026-11-04 — Écarts avec la décision #12 :** `prompts/v1.yaml` contient 10 exemples au lieu de 3 à 5, pour couvrir les cas ambigus du score de confiance. Pour les notes de 1 à 4, le ton demande des excuses sans rien promettre, au lieu d'une piste de résolution, pour éviter tout engagement commercial. `eval/` dira s'il faut revenir dessus.
 
 ---
 
@@ -132,7 +135,7 @@ project/
 | `texte_avis` | TEXT | contenu original |
 | `reponse_generee` | TEXT | dernière réponse produite par l'agent |
 | `reponse_validee` | TEXT/NULL | texte final approuvé par l'humain (identique ou édité) |
-| `statut_pipeline` | Enum Python | nouveau / généré / en_validation / validé / synchronisé_pms |
+| `statut_pipeline` | Enum Python | nouveau / en_validation / à_traiter_manuellement / écarté / validé / synchronisé_pms |
 | `flag_surveillance` | Boolean | True / False |
 | `flag_doublon` | BOOLEAN | True / False |
 | `flag_hors_sujet` | BOOLEAN | True / False |
@@ -152,7 +155,7 @@ project/
 |---|---|---|
 | `id` | INTEGER PK | identifiant du log |
 | `review_id_pms` | TEXT | référence à l'avis concerné |
-| `action` | Enum Python | généré / régénéré / validé / rejeté / publié / échec / erreur_finale |
+| `action` | Enum Python | généré / régénéré / validé / rejeté / publié / erreur_finale / signalé |
 | `details` | TEXT | contexte libre (ex: "tentative 2/2", "erreur: timeout LLM") |
 | `acteur` | Enum Python | agent / humain |
 | `timestamp` | TIMESTAMP | quand l'action a eu lieu |
