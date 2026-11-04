@@ -176,6 +176,87 @@ def test_avis_normal_recoit_une_reponse():
     assert avis.reponse_generee == "Merci."
 
 
+# --- Version du prompt ---
+
+def test_reponse_generee_note_la_version_du_prompt():
+    pipeline._recuperer_avis_pms = lambda: [avis_pms(1)]
+
+    pipeline.run_pipeline()
+
+    assert tous_les_avis()[0].prompt_version == pipeline.CONFIG["llm"]["prompt_version"]
+
+
+def test_avis_signale_n_a_pas_de_version_de_prompt():
+    pipeline.evaluer_avis = lambda *args: verdict(hors_sujet=True, raison="Spam.")
+    pipeline._recuperer_avis_pms = lambda: [avis_pms(1)]
+
+    pipeline.run_pipeline()
+
+    assert tous_les_avis()[0].prompt_version is None
+
+
+# --- Avis mal formés : ils ne doivent pas bloquer les suivants ---
+
+def test_plateforme_inconnue_ne_bloque_pas_les_suivants():
+    pipeline._recuperer_avis_pms = lambda: [avis_pms(3) | {"plateforme": "tripadvisor"}, avis_pms(2), avis_pms(1)]
+
+    resume = pipeline.run_pipeline()
+
+    assert resume["invalides"] == 1
+    assert resume["generes"] == 2
+    assert ids_en_base() == [1, 2]
+
+
+def test_date_invalide_ne_bloque_pas_les_suivants():
+    pipeline._recuperer_avis_pms = lambda: [avis_pms(2) | {"date_avis": "pas une date"}, avis_pms(1)]
+
+    resume = pipeline.run_pipeline()
+
+    assert resume["invalides"] == 1
+    assert ids_en_base() == [1]
+
+
+def test_date_manquante_ne_bloque_pas_les_suivants():
+    sans_date = avis_pms(2)
+    del sans_date["date_avis"]
+    pipeline._recuperer_avis_pms = lambda: [sans_date, avis_pms(1)]
+
+    resume = pipeline.run_pipeline()
+
+    assert resume["invalides"] == 1
+    assert ids_en_base() == [1]
+
+
+def test_note_manquante_ne_bloque_pas_les_suivants():
+    sans_note = avis_pms(2)
+    del sans_note["note"]
+    pipeline._recuperer_avis_pms = lambda: [sans_note, avis_pms(1)]
+
+    resume = pipeline.run_pipeline()
+
+    assert resume["invalides"] == 1
+    assert ids_en_base() == [1]
+
+
+def test_commentaire_qui_n_est_pas_du_texte_ne_bloque_pas_les_suivants():
+    pipeline._recuperer_avis_pms = lambda: [avis_pms_avec_texte(2, 123), avis_pms(1)]
+
+    resume = pipeline.run_pipeline()
+
+    assert resume["invalides"] == 1
+    assert ids_en_base() == [1]
+
+
+def test_avis_mal_forme_ne_bloque_pas_non_plus_le_run_suivant():
+    pipeline._recuperer_avis_pms = lambda: [avis_pms(2) | {"plateforme": "tripadvisor"}, avis_pms(1)]
+
+    pipeline.run_pipeline()
+    resume = pipeline.run_pipeline()
+
+    assert resume["invalides"] == 1
+    assert resume["deja_traites"] == 1
+
+
 # --- Requêtes de KPI de cdc-notes.md ---
 
 def ajouter_avis_pour_les_kpi():

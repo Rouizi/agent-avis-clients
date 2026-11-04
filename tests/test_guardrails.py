@@ -49,6 +49,21 @@ def test_avis_trop_court_n_est_jamais_un_doublon():
     assert not est_doublon("Super séjour !", ["Super séjour !"])
 
 
+def test_doublon_detecte_sur_un_avis_de_plus_de_200_caracteres():
+    avis_long = AVIS_LONG * 4
+    presque_pareil = avis_long.replace("Appartement", "Logement", 1)
+
+    assert len(avis_long) > 200
+    assert est_doublon(presque_pareil, [avis_long])
+
+
+def test_avis_longs_differents_ne_sont_pas_des_doublons():
+    avis_long = AVIS_LONG * 4
+    autre_avis = "Logement bruyant et mal isolé, nuits difficiles, accueil absent. " * 4
+
+    assert not est_doublon(autre_avis, [avis_long])
+
+
 def test_evaluer_avis_combine_tous_les_flags():
     guardrails.est_hors_sujet = lambda commentaire: (True, "Spam.")
 

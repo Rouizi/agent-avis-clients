@@ -70,7 +70,8 @@ def est_doublon(commentaire: str, commentaires_connus: list[str]) -> bool:
         # Borne haute du ratio : si les longueurs sont trop différentes, inutile de comparer
         if total == 0 or 2 * min(len(candidat), len(autre_norm)) / total < seuil:
             continue
-        if SequenceMatcher(None, candidat, autre_norm).ratio() >= seuil:
+        # autojunk=False : sinon, à partir de 200 caractères, les lettres fréquentes sont ignorées et le ratio s'effondre
+        if SequenceMatcher(None, candidat, autre_norm, autojunk=False).ratio() >= seuil:
             return True
     return False
 
@@ -90,8 +91,8 @@ def est_hors_sujet(commentaire: str) -> tuple[bool, str]:
         try:
             response = client.chat.completions.create(
                 model=CONFIG["llm"]["model"],
-                temperature=0,
-                max_tokens=100,
+                temperature=CONFIG["llm"]["temperature_hors_sujet"],
+                max_tokens=CONFIG["llm"]["max_tokens_hors_sujet"],
                 response_format={"type": "json_object"},
                 messages=[
                     {"role": "system", "content": PROMPT_HORS_SUJET["system"]},
@@ -102,7 +103,8 @@ def est_hors_sujet(commentaire: str) -> tuple[bool, str]:
             data = json.loads(response.choices[0].message.content)
             if not isinstance(data["hors_sujet"], bool):
                 raise ValueError("Le champ hors_sujet doit être un booléen")
-            return data["hors_sujet"], str(data.get("raison", "")).strip()
+            raison = data.get("raison")
+            return data["hors_sujet"], raison.strip() if isinstance(raison, str) else ""
         except (OpenAIError, json.JSONDecodeError, KeyError, ValueError, TypeError) as e:
             derniere_erreur = e
             if tentative < max_retries:

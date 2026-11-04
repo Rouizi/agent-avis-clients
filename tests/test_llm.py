@@ -6,7 +6,8 @@ import pytest
 
 import guardrails
 import llm_client
-from llm_client import LLMError
+import outils
+from llm_client import CONFIG, LLMError
 from outils import attentes
 
 BONNE_REPONSE = json.dumps({"reponse": "Merci pour votre retour.", "score_confiance": 150})
@@ -69,6 +70,42 @@ def test_generation_echoue_apres_trois_sorties_invalides():
     assert attentes == [2, 4]
 
 
+def test_reponse_null_declenche_un_nouvel_essai():
+    llm_client.client, appels = faux_client('{"reponse": null, "score_confiance": 80}', BONNE_REPONSE)
+
+    resultat = generer()
+
+    assert resultat["reponse"] == "Merci pour votre retour."
+    assert len(appels) == 2
+
+
+def test_reponse_qui_n_est_pas_du_texte_declenche_un_nouvel_essai():
+    llm_client.client, appels = faux_client('{"reponse": {"a": 1}, "score_confiance": 80}', BONNE_REPONSE)
+
+    assert generer()["reponse"] == "Merci pour votre retour."
+    assert len(appels) == 2
+
+
+def test_score_booleen_declenche_un_nouvel_essai():
+    llm_client.client, appels = faux_client('{"reponse": "Merci.", "score_confiance": true}', BONNE_REPONSE)
+
+    assert generer()["score_confiance"] == 100
+    assert len(appels) == 2
+
+
+def test_reponse_null_trois_fois_finit_en_erreur():
+    null = '{"reponse": null, "score_confiance": 80}'
+    llm_client.client, _ = faux_client(null, null, null)
+
+    with pytest.raises(LLMError):
+        generer()
+
+
+def test_client_openai_sans_retry_cache_et_avec_timeout():
+    assert outils.client_openai_reel.max_retries == 0
+    assert outils.client_openai_reel.timeout == CONFIG["llm"]["timeout_secondes"]
+
+
 def test_reponse_rejetee_ajoutee_au_message():
     llm_client.client, appels = faux_client(BONNE_REPONSE)
 
@@ -83,6 +120,21 @@ def test_classifieur_renvoie_le_verdict_et_la_raison():
     guardrails.client, _ = faux_client(BON_VERDICT)
 
     assert guardrails.est_hors_sujet("Mon colis est perdu.") == (True, "Parle d'un colis.")
+
+
+def test_classifieur_raison_null_reste_vide():
+    guardrails.client, _ = faux_client('{"hors_sujet": true, "raison": null}')
+
+    assert guardrails.est_hors_sujet("Mon colis est perdu.") == (True, "")
+
+
+def test_classifieur_utilise_les_reglages_de_la_config():
+    guardrails.client, appels = faux_client(BON_VERDICT)
+
+    guardrails.est_hors_sujet("Mon colis est perdu.")
+
+    assert appels[0]["temperature"] == CONFIG["llm"]["temperature_hors_sujet"]
+    assert appels[0]["max_tokens"] == CONFIG["llm"]["max_tokens_hors_sujet"]
 
 
 def test_classifieur_reessaie_si_le_verdict_n_est_pas_un_booleen():

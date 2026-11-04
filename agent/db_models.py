@@ -71,6 +71,7 @@ class Avis(Base):
     flag_hors_sujet = Column(Boolean, default=False)
     raison_hors_sujet = Column(Text, nullable=True)  # explication du classifieur, affichée en revue manuelle
     score_confiance = Column(Integer, nullable=True)
+    prompt_version = Column(String(30), nullable=True)  # version du prompt qui a écrit reponse_generee, pour comparer les versions
 
     nb_tentatives_regen = Column(Integer, default=0)
     nb_tentatives_erreur = Column(Integer, default=0)

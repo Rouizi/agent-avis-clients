@@ -16,7 +16,7 @@ Environnement dans `venv/`, dépendances dans `requirements.txt`.
 
 `OPENAI_API_KEY` doit être définie avant de lancer le seed ou tout code de `agent/` : le client OpenAI est créé à l'import et échoue sans clé.
 
-Les imports sont à plat et `mock_pms.db` a un chemin relatif : lancer chaque service **depuis son propre dossier**.
+Les imports sont à plat : lancer chaque service **depuis son propre dossier**.
 
 ```bash
 # Mock PMS (port 8000, doc Swagger sur /docs)
@@ -57,7 +57,7 @@ Comment lire l'état d'un avis dans `avis` :
 - **À traiter manuellement :** `statut_pipeline = à_traiter_manuellement`, après 3 rejets : l'humain écrit lui-même la réponse.
 - **Écarté :** `statut_pipeline = écarté`, doublon ou hors-sujet écarté en revue manuelle : aucune réponse publiée, et l'avis reste `en_attente_evaluation` côté PMS.
 - **File d'erreur :** `statut_erreur = en_erreur`, après 3 échecs ; `statut_pipeline` reste `nouveau`, ou `en_validation` si c'est une régénération qui a échoué. La file de validation doit donc exclure `en_erreur`.
-- **Avis vides :** ni stockés ni traités ; ils sont seulement comptés dans le résumé de chaque run.
+- **Avis vides et mal formés :** ni stockés ni traités ; ils sont seulement comptés dans le résumé de chaque run (`vides`, `invalides`).
 
 Les flags sont indépendants et peuvent coexister. Un avis très négatif reçoit quand même une réponse, avec `flag_surveillance`. Toute publication passe par un humain en V1, sans exception.
 

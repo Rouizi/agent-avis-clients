@@ -23,7 +23,8 @@ def _charger_yaml(chemin: Path) -> dict:
 CONFIG = _charger_yaml(BASE_DIR / "config.yaml")
 PROMPT = _charger_yaml(BASE_DIR / "prompts" / f"{CONFIG['llm']['prompt_version']}.yaml")
 
-client = OpenAI()
+# max_retries=0 : seuls nos propres essais comptent (generation.max_retries, zone grise #7)
+client = OpenAI(timeout=CONFIG["llm"]["timeout_secondes"], max_retries=0)
 
 class LLMError(Exception):
     """Échec définitif après tous les retries. Porte le nombre de tentatives effectuées."""
@@ -69,12 +70,14 @@ def _appeler_llm(note: int, plateforme: str, commentaire: str,
     )
 
     data = json.loads(response.choices[0].message.content)
-    reponse = str(data["reponse"]).strip()
-    score = int(data["score_confiance"])
-    if not reponse:
-        raise ValueError("Réponse vide")
+    reponse = data["reponse"]
+    score = data["score_confiance"]
+    if not isinstance(reponse, str) or not reponse.strip():
+        raise ValueError("Réponse absente ou vide")
+    if isinstance(score, bool):  # int(True) vaudrait 1 sans aucune erreur
+        raise ValueError("Le score de confiance doit être un nombre")
 
-    return {"reponse": reponse, "score_confiance": max(0, min(100, score))}
+    return {"reponse": reponse.strip(), "score_confiance": max(0, min(100, int(score)))}
 
 
 def generer_reponse(note: int, plateforme: str, commentaire: str,

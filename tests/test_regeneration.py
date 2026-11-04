@@ -35,6 +35,14 @@ def test_premier_rejet_donne_une_nouvelle_reponse():
     assert avis.statut_pipeline == StatutPipeline.EN_VALIDATION
 
 
+def test_regeneration_note_la_version_du_prompt():
+    ajouter_avis_a_valider()
+
+    rejeter()
+
+    assert tous_les_avis()[0].prompt_version == pipeline.CONFIG["llm"]["prompt_version"]
+
+
 def test_la_reponse_rejetee_est_envoyee_en_contre_exemple():
     recu = []
     pipeline.generer_reponse = lambda *args, reponse_rejetee: (

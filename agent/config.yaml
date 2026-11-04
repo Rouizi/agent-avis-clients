@@ -7,6 +7,9 @@ llm:
   max_tokens: 400
   prompt_version: v1          # correspond à prompts/v1.yaml
   prompt_hors_sujet: hors_sujet_v1  # classifieur hors-sujet, prompts/hors_sujet_v1.yaml
+  temperature_hors_sujet: 0
+  max_tokens_hors_sujet: 100
+  timeout_secondes: 60        # attente maximale d'une réponse d'OpenAI (zone grise #7)
 
 pms:
   base_url: "http://localhost:8000"   # mock PMS (FastAPI)

@@ -120,6 +120,12 @@ project/
 - **2026-11-04 — KPI « % automatisé » :** il mesure les avis traités sans intervention supplémentaire (ni régénération, ni flag doublon ou hors-sujet, ni erreur). Il ne mesure pas l'auto-publication, exclue en V1 (décision #1), et ne tient pas compte des retouches.
 - **2026-11-04 — Écarts avec la décision #12 :** `prompts/v1.yaml` contient 10 exemples au lieu de 3 à 5, pour couvrir les cas ambigus du score de confiance. Pour les notes de 1 à 4, le ton demande des excuses sans rien promettre, au lieu d'une piste de résolution, pour éviter tout engagement commercial. `eval/` dira s'il faut revenir dessus.
 
+**À traiter plus tard (relecture du code du 2026-11-04) :**
+- **`eval/` :** inclure des avis très courts (le plus court du jeu de test fait 39 caractères), des avis longs (aucun ne dépasse 200 caractères), une note qui contredit le texte et une tentative de manipulation du LLM. Prévoir plusieurs essais par cas (température à 0,7) et un moyen de choisir la version du prompt, que `generer_reponse` ne reçoit pas en paramètre.
+- **Flask :** ajouter `ActionLog.ECARTE` ; calculer la priorité à l'affichage, car la colonne n'est recalculée qu'à chaque run ; exclure `en_erreur` de la file de validation ; refuser une publication vide ; gérer un nouvel essai de publication quand le `PATCH` est déjà passé (il répond alors 409) ; décider du sort des avis de plus de 14 jours.
+- **n8n :** si n8n tourne dans Docker, ne pas exposer au-delà de la machine l'API de l'agent, qui n'a pas d'authentification.
+- **Sans gravité :** `datetime.utcnow` est déprécié ; `planification`, `langue_reponse` et `delai_publication_jours` ne sont lus nulle part dans `config.yaml` ; les compteurs `vides` et `invalides` du résumé comptent tous les avis renvoyés par le PMS, pas seulement ceux de la semaine.
+
 ---
 
 ## Schéma `agent_internal.db`
@@ -141,6 +147,7 @@ project/
 | `flag_hors_sujet` | BOOLEAN | True / False |
 | `raison_hors_sujet` | TEXT/NULL | explication du classifieur, affichée en revue manuelle |
 | `score_confiance` | INTEGER | 0-100, donné par le LLM |
+| `prompt_version` | TEXT/NULL | version du prompt qui a écrit `reponse_generee`, pour comparer les versions |
 | `nb_tentatives_regen` | INTEGER | 0-2 |
 | `nb_tentatives_erreur` | INTEGER | 0-3 |
 | `statut_erreur` | TEXT | ok / en_erreur |
@@ -154,7 +161,7 @@ project/
 | Colonne | Type | Rôle |
 |---|---|---|
 | `id` | INTEGER PK | identifiant du log |
-| `review_id_pms` | TEXT | référence à l'avis concerné |
+| `review_id_pms` | INTEGER | référence à l'avis concerné |
 | `action` | Enum Python | généré / régénéré / validé / rejeté / publié / erreur_finale / signalé |
 | `details` | TEXT | contexte libre (ex: "tentative 2/2", "erreur: timeout LLM") |
 | `acteur` | Enum Python | agent / humain |

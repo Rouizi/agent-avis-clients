@@ -4,6 +4,7 @@ Simule le système externe du client : ne connaît que les 3 statuts du CDC.
 """
 import enum
 from datetime import datetime
+from pathlib import Path
 
 from sqlalchemy import (
     create_engine, Column, Integer, Text, Date, DateTime, Enum as SAEnum
@@ -11,6 +12,9 @@ from sqlalchemy import (
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 Base = declarative_base()
+
+# Chemin absolu : la même base quel que soit le dossier de lancement
+DB_URL = f"sqlite:///{Path(__file__).parent / 'mock_pms.db'}"
 
 
 class Plateforme(str, enum.Enum):
@@ -40,7 +44,7 @@ class Review(Base):
     date_publication = Column(DateTime, nullable=True)
 
 
-def init_db(db_path="sqlite:///mock_pms.db"):
+def init_db(db_path=DB_URL):
     """Crée le fichier .db et la table si elle n'existe pas encore."""
     engine = create_engine(db_path)
     Base.metadata.create_all(engine)

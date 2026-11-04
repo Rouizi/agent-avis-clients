@@ -46,23 +46,23 @@ def lister_avis(
     plateforme: Optional[Plateforme] = Query(None),
 ):
     """Liste les avis, filtrables par statut et/ou plateforme."""
-    session = get_session(engine)
-    query = session.query(Review)
-    if statut is not None:
-        query = query.filter(Review.statut == statut)
-    if plateforme is not None:
-        query = query.filter(Review.plateforme == plateforme)
-    return query.all()
+    with get_session(engine) as session:
+        query = session.query(Review)
+        if statut is not None:
+            query = query.filter(Review.statut == statut)
+        if plateforme is not None:
+            query = query.filter(Review.plateforme == plateforme)
+        return query.all()
 
 
 @app.get("/reviews/{review_id}", response_model=ReviewOut)
 def obtenir_avis(review_id: int):
     """Détail d'un avis par son id."""
-    session = get_session(engine)
-    review = session.query(Review).filter(Review.id == review_id).first()
-    if review is None:
-        raise HTTPException(status_code=404, detail="Avis introuvable")
-    return review
+    with get_session(engine) as session:
+        review = session.query(Review).filter(Review.id == review_id).first()
+        if review is None:
+            raise HTTPException(status_code=404, detail="Avis introuvable")
+        return review
 
 
 @app.patch("/reviews/{review_id}/statut", response_model=ReviewOut)
@@ -73,42 +73,42 @@ def changer_statut(review_id: int, body: StatutUpdate):
             status_code=400,
             detail="Utilise POST /reviews/{id}/publish pour publier un avis",
         )
- 
-    session = get_session(engine)
-    review = session.query(Review).filter(Review.id == review_id).first()
-    if review is None:
-        raise HTTPException(status_code=404, detail="Avis introuvable")
- 
-    if (review.statut != StatutPMS.EN_ATTENTE_EVALUATION
-            or body.statut != StatutPMS.EN_ATTENTE_PUBLICATION):
-        raise HTTPException(
-            status_code=409,
-            detail="Seul le passage de en_attente_evaluation à en_attente_publication est autorisé",
-        )
 
-    review.statut = body.statut
-    session.commit()
-    session.refresh(review)
-    return review
+    with get_session(engine) as session:
+        review = session.query(Review).filter(Review.id == review_id).first()
+        if review is None:
+            raise HTTPException(status_code=404, detail="Avis introuvable")
+
+        if (review.statut != StatutPMS.EN_ATTENTE_EVALUATION
+                or body.statut != StatutPMS.EN_ATTENTE_PUBLICATION):
+            raise HTTPException(
+                status_code=409,
+                detail="Seul le passage de en_attente_evaluation à en_attente_publication est autorisé",
+            )
+
+        review.statut = body.statut
+        session.commit()
+        session.refresh(review)
+        return review
 
 
 @app.post("/reviews/{review_id}/publish", response_model=ReviewOut)
 def publier_avis(review_id: int, body: PublishRequest):
     """Publie la réponse validée : statut -> publié, enregistre le texte final."""
-    session = get_session(engine)
-    review = session.query(Review).filter(Review.id == review_id).first()
-    if review is None:
-        raise HTTPException(status_code=404, detail="Avis introuvable")
- 
-    if review.statut != StatutPMS.EN_ATTENTE_PUBLICATION:
-        raise HTTPException(
-            status_code=409,
-            detail="L'avis doit être en_attente_publication avant d'être publié",
-        )
- 
-    review.statut = StatutPMS.PUBLIE
-    review.reponse_publiee = body.reponse
-    review.date_publication = datetime.utcnow()
-    session.commit()
-    session.refresh(review)
-    return review
+    with get_session(engine) as session:
+        review = session.query(Review).filter(Review.id == review_id).first()
+        if review is None:
+            raise HTTPException(status_code=404, detail="Avis introuvable")
+
+        if review.statut != StatutPMS.EN_ATTENTE_PUBLICATION:
+            raise HTTPException(
+                status_code=409,
+                detail="L'avis doit être en_attente_publication avant d'être publié",
+            )
+
+        review.statut = StatutPMS.PUBLIE
+        review.reponse_publiee = body.reponse
+        review.date_publication = datetime.utcnow()
+        session.commit()
+        session.refresh(review)
+        return review

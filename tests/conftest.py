@@ -43,6 +43,8 @@ import guardrails
 import llm_client
 import outils
 
+outils.client_openai_reel = llm_client.client  # gardé pour vérifier sa configuration
+
 
 class _OpenAIInterdit:
     """Fait échouer tout test qui tenterait un vrai appel à OpenAI."""
@@ -67,6 +69,9 @@ def _preparer_chaque_test(tmp_path, monkeypatch):
     outils.attentes.clear()
 
     # Ce que les tests remplacent eux-mêmes : la valeur d'origine est remise après le test
+    monkeypatch.setattr(pipeline, "ETAT", {"statut": "jamais_lance"})
+    monkeypatch.setattr(pipeline, "run_pipeline", pipeline.run_pipeline)
+    monkeypatch.setattr(pipeline, "rejouer_erreurs", pipeline.rejouer_erreurs)
     monkeypatch.setattr(pipeline, "_recuperer_avis_pms", pipeline._recuperer_avis_pms)
     monkeypatch.setattr(guardrails, "est_hors_sujet", guardrails.est_hors_sujet)
     monkeypatch.setattr(requests, "get", requests.get)

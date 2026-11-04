@@ -70,6 +70,18 @@ def _recuperer_avis_pms() -> list[dict]:
             time.sleep(2 ** tentative)  # attente progressive : 2s, 4s...
 
 
+def _construire_avis(r: dict) -> Avis:
+    """Transforme un avis du PMS en ligne de la base. Lève une erreur si l'avis est mal formé."""
+    return Avis(
+        review_id_pms=int(r["id"]),
+        plateforme=Plateforme(r["plateforme"]),
+        note=int(r["note"]),
+        texte_avis=r["commentaire"],
+        date_avis=date.fromisoformat(r["date_avis"]),
+        statut_pipeline=StatutPipeline.NOUVEAU,
+    )
+
+
 def _rafraichir_priorites(session) -> None:
     """Recalcule la priorité délai des avis en attente : un avis vieillit d'un run à l'autre."""
     en_attente = session.query(Avis).filter(Avis.statut_pipeline != StatutPipeline.SYNCHRONISE_PMS)
@@ -111,10 +123,12 @@ def _traiter(session, avis: Avis, commentaires_connus: list[str]) -> str:
                                        reponse_rejetee=avis.reponse_generee)
             avis.reponse_generee = resultat["reponse"]
             avis.score_confiance = resultat["score_confiance"]
+            avis.prompt_version = CONFIG["llm"]["prompt_version"]
             avis.statut_pipeline = StatutPipeline.EN_VALIDATION
             avis.nb_tentatives_erreur = resultat["tentatives"] - 1  # échecs avant le succès
             _log(session, avis.review_id_pms, ActionLog.GENERE, Acteur.AGENT,
-                 f"score_confiance={resultat['score_confiance']}, tentatives={resultat['tentatives']}")
+                 f"prompt={avis.prompt_version}, score_confiance={resultat['score_confiance']}, "
+                 f"tentatives={resultat['tentatives']}")
             issue = "genere"
         avis.statut_erreur = StatutErreur.OK
 
@@ -137,7 +151,7 @@ def run_pipeline(limite: Optional[int] = None) -> dict:
     limite : nombre maximal d'avis traités (reprises comprises), pour tester sur un échantillon.
     """
     debut = datetime.utcnow()
-    resume = {"repris": 0, "recuperes": 0, "deja_traites": 0, "vides": 0,
+    resume = {"repris": 0, "recuperes": 0, "deja_traites": 0, "vides": 0, "invalides": 0,
               "generes": 0, "signales": 0, "erreurs": 0}
     cle_resume = {"genere": "generes", "signale": "signales", "erreur": "erreurs"}
 
@@ -163,24 +177,22 @@ def run_pipeline(limite: Optional[int] = None) -> dict:
         connus = _textes_connus(session)
 
         # Les plus anciens d'abord : ce sont les plus proches de la limite de publication
-        for r in sorted(avis_pms, key=lambda x: x["date_avis"]):
-            if r["id"] in deja_en_base:                 # F4 : jamais deux fois le même avis
-                resume["deja_traites"] += 1
-                continue
-            if est_vide(r.get("commentaire")):          # CDC 3.2 : note sans commentaire
-                resume["vides"] += 1
+        for r in sorted(avis_pms, key=lambda x: str(x.get("date_avis", ""))):
+            try:
+                if r.get("id") in deja_en_base:         # F4 : jamais deux fois le même avis
+                    resume["deja_traites"] += 1
+                    continue
+                if est_vide(r.get("commentaire")):      # CDC 3.2 : note sans commentaire
+                    resume["vides"] += 1
+                    continue
+                avis = _construire_avis(r)
+            except (KeyError, ValueError, TypeError, AttributeError):
+                # Avis mal formé : il ne doit pas bloquer les suivants, à ce run comme aux prochains
+                resume["invalides"] += 1
                 continue
             if limite is not None and traites >= limite:
                 continue                                # on parcourt la suite : compteurs du résumé exacts
 
-            avis = Avis(
-                review_id_pms=r["id"],
-                plateforme=Plateforme(r["plateforme"]),
-                note=r["note"],
-                texte_avis=r["commentaire"],
-                date_avis=date.fromisoformat(r["date_avis"]),
-                statut_pipeline=StatutPipeline.NOUVEAU,
-            )
             session.add(avis)
             session.commit()  # l'avis est enregistré avant traitement : reprise possible en cas de crash
 
@@ -241,9 +253,10 @@ def regenerer(session, avis: Avis) -> bool:
     avis.nb_tentatives_regen += 1
     avis.reponse_generee = resultat["reponse"]
     avis.score_confiance = resultat["score_confiance"]
+    avis.prompt_version = CONFIG["llm"]["prompt_version"]
     _log(session, avis.review_id_pms, ActionLog.REGENERE, Acteur.AGENT,
          f"régénération {avis.nb_tentatives_regen}/{CONFIG['generation']['max_regenerations']}, "
-         f"score_confiance={resultat['score_confiance']}")
+         f"prompt={avis.prompt_version}, score_confiance={resultat['score_confiance']}")
     session.commit()
     return True
 
@@ -256,8 +269,6 @@ ETAT = {"statut": "jamais_lance"}
 
 
 def _executer(fonction) -> None:
-    ETAT.clear()
-    ETAT.update({"statut": "en_cours", "debut": datetime.utcnow().isoformat()})
     try:
         ETAT.update({"statut": "termine", "resume": fonction()})
     except Exception as e:  # noqa: BLE001 : on veut tout capturer pour le statut
@@ -270,6 +281,9 @@ def _executer(fonction) -> None:
 def _lancer(background: BackgroundTasks, fonction) -> dict:
     if not _verrou.acquire(blocking=False):
         raise HTTPException(status_code=409, detail="Un run est déjà en cours")
+    # Avant de répondre : la tâche ne démarre qu'après la réponse, et /run-status afficherait encore le run précédent
+    ETAT.clear()
+    ETAT.update({"statut": "en_cours", "debut": datetime.utcnow().isoformat()})
     background.add_task(_executer, fonction)
     return {"statut": "demarre"}
 

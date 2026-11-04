@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from fastapi.testclient import TestClient
 
 import main
+import models
 from decaler_dates import AGE_MAX_JOURS, decaler_dates
 from models import StatutPMS, get_session
 from outils import creer_avis_dans_pms, date_dans_pms
@@ -120,6 +121,13 @@ def test_liste_filtree_par_statut():
     reponse = client.get("/reviews", params={"statut": EVALUATION.value})
 
     assert [avis["id"] for avis in reponse.json()] == [attendu]
+
+
+# --- Chemin de la base ---
+
+def test_chemin_de_la_base_ne_depend_pas_du_dossier_de_lancement():
+    assert models.DB_URL.startswith("sqlite:////")
+    assert models.DB_URL.endswith("mock_pms/mock_pms.db")
 
 
 # --- Décalage des dates ---
