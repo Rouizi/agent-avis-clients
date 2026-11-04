@@ -79,6 +79,13 @@ def changer_statut(review_id: int, body: StatutUpdate):
     if review is None:
         raise HTTPException(status_code=404, detail="Avis introuvable")
  
+    if (review.statut != StatutPMS.EN_ATTENTE_EVALUATION
+            or body.statut != StatutPMS.EN_ATTENTE_PUBLICATION):
+        raise HTTPException(
+            status_code=409,
+            detail="Seul le passage de en_attente_evaluation à en_attente_publication est autorisé",
+        )
+
     review.statut = body.statut
     session.commit()
     session.refresh(review)

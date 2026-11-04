@@ -5,6 +5,7 @@ génère les réponses et les met en file de validation (agent_internal.db).
 
 Lancement :
   CLI       : python pipeline.py              -> un run complet
+              python pipeline.py --limite 20  -> traite au plus 20 avis (test sur un échantillon)
               python pipeline.py --rejouer    -> rejoue les avis en erreur
   API (n8n) : uvicorn pipeline:app --port 8001
               POST /run-pipeline (démarre en arrière-plan), GET /run-status
@@ -12,6 +13,7 @@ Lancement :
 import argparse
 import json
 import threading
+import time
 from datetime import date, datetime
 from typing import Optional
 
@@ -45,15 +47,27 @@ def _textes_connus(session, avant_id: Optional[int] = None) -> list[str]:
 
 
 def _recuperer_avis_pms() -> list[dict]:
-    """GET /reviews?statut=en_attente_evaluation sur le PMS."""
+    """
+    GET /reviews?statut=en_attente_evaluation sur le PMS, avec retry (zone grise #7).
+    Après le dernier échec, l'erreur remonte et le run s'arrête : aucun avis n'a encore été
+    récupéré, ils seront repris au run suivant.
+    """
     pms = CONFIG["pms"]
-    reponse = requests.get(
-        f"{pms['base_url']}/reviews",
-        params={"statut": "en_attente_evaluation"},
-        timeout=pms["timeout_secondes"],
-    )
-    reponse.raise_for_status()
-    return reponse.json()
+    max_retries = CONFIG["generation"]["max_retries"]
+
+    for tentative in range(1, max_retries + 1):
+        try:
+            reponse = requests.get(
+                f"{pms['base_url']}/reviews",
+                params={"statut": "en_attente_evaluation"},
+                timeout=pms["timeout_secondes"],
+            )
+            reponse.raise_for_status()
+            return reponse.json()
+        except requests.RequestException:
+            if tentative == max_retries:
+                raise
+            time.sleep(2 ** tentative)  # attente progressive : 2s, 4s...
 
 
 def _rafraichir_priorites(session) -> None:
@@ -115,8 +129,11 @@ def _traiter(session, avis: Avis, commentaires_connus: list[str]) -> str:
 
 # --- Runs ---
 
-def run_pipeline() -> dict:
-    """Un run complet : récupération, filtrage, garde-fous, génération. Renvoie un résumé."""
+def run_pipeline(limite: Optional[int] = None) -> dict:
+    """
+    Un run complet : récupération, filtrage, garde-fous, génération. Renvoie un résumé.
+    limite : nombre maximal d'avis traités (reprises comprises), pour tester sur un échantillon.
+    """
     debut = datetime.utcnow()
     resume = {"repris": 0, "recuperes": 0, "deja_traites": 0, "vides": 0,
               "generes": 0, "signales": 0, "erreurs": 0}
@@ -130,11 +147,12 @@ def run_pipeline() -> dict:
         a_reprendre = session.query(Avis).filter(
             Avis.statut_pipeline == StatutPipeline.NOUVEAU,
             Avis.statut_erreur == StatutErreur.OK,
-        ).order_by(Avis.id).all()
+        ).order_by(Avis.id).limit(limite).all()
         for avis in a_reprendre:
             issue = _traiter(session, avis, _textes_connus(session, avant_id=avis.id))
             resume["repris"] += 1
             resume[cle_resume[issue]] += 1
+        traites = len(a_reprendre)
 
         avis_pms = _recuperer_avis_pms()
         resume["recuperes"] = len(avis_pms)
@@ -150,6 +168,8 @@ def run_pipeline() -> dict:
             if est_vide(r.get("commentaire")):          # CDC 3.2 : note sans commentaire
                 resume["vides"] += 1
                 continue
+            if limite is not None and traites >= limite:
+                break
 
             avis = Avis(
                 review_id_pms=r["id"],
@@ -165,6 +185,7 @@ def run_pipeline() -> dict:
             issue = _traiter(session, avis, connus)
             resume[cle_resume[issue]] += 1
             connus.append(r["commentaire"])
+            traites += 1
     finally:
         session.close()
 
@@ -268,6 +289,11 @@ def api_run_status():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Pipeline de traitement des avis clients")
     parser.add_argument("--rejouer", action="store_true", help="rejouer les avis en erreur")
+    parser.add_argument("--limite", type=int, help="nombre maximal d'avis à traiter pendant ce run")
     args = parser.parse_args()
-    resultat = rejouer_erreurs() if args.rejouer else run_pipeline()
+    if args.limite is not None and args.limite < 1:
+        parser.error("--limite doit être supérieur ou égal à 1")
+    if args.limite is not None and args.rejouer:
+        parser.error("--limite ne se combine pas avec --rejouer")
+    resultat = rejouer_erreurs() if args.rejouer else run_pipeline(limite=args.limite)
     print(json.dumps(resultat, ensure_ascii=False, indent=2))

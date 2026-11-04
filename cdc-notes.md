@@ -115,6 +115,8 @@ project/
 ## 7. Journal de décisions
 *(à compléter au fil du projet — date, décision prise, raison)*
 
+- **2026-11-04 — Avis écartés en revue manuelle :** un doublon ou un hors-sujet écarté par le relecteur reste sans réponse publiée. Raison : un avis écarté n'a pas à recevoir de réponse.
+
 ---
 
 ## Schéma `agent_internal.db`

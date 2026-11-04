@@ -22,13 +22,19 @@ Les imports sont à plat et `mock_pms.db` a un chemin relatif : lancer chaque se
 # Mock PMS (port 8000, doc Swagger sur /docs)
 cd mock_pms && uvicorn main:app --port 8000
 cd mock_pms && python seed_data.py    # appelle OpenAI et AJOUTE des avis à chaque lancement
+cd mock_pms && python decaler_dates.py   # redate les avis en attente (0 à 16 jours), à lancer juste avant un test
 
 # Agent (le mock PMS doit tourner)
 cd agent && python pipeline.py             # un run complet
+cd agent && python pipeline.py --limite 20 # traite au plus 20 avis, les plus anciens d'abord (les suivants au prochain run)
 cd agent && python pipeline.py --rejouer   # rejoue les avis en erreur
 cd agent && uvicorn pipeline:app --port 8001   # POST /run-pipeline, POST /rejouer-erreurs, GET /run-status
 
-# Auto-tests intégrés (il n'y a ni suite pytest ni linter configurés)
+# Tests sans OpenAI, ni vraie base, ni clé à définir (faux LLM, bases temporaires). Pas de linter configuré.
+pytest tests/                                      # depuis la racine du projet
+pytest tests/test_pipeline.py -k limite            # un seul fichier, filtré par nom de test
+
+# Auto-tests intégrés
 cd agent && python guardrails.py    # règles sans LLM ; le classifieur seulement si la clé commence par "sk-"
 cd agent && python llm_client.py    # une génération réelle
 ```
