@@ -1,0 +1,31 @@
+
+=== Prompt v1 : 39 cas, 102 réponses, 0 erreurs ===
+Réponses sans aucun défaut : 49% (sur les réponses jugées ; 0 erreurs du juge)
+
+1. Hors-sujet
+   Faux positifs : 2, faux négatifs : 0, erreurs techniques : 0
+   - mixte_courses : Mention positive sur l'appartement, mais plainte sur une livraison sans lien avec le séjour.
+   - mixte_colis : Mention positive sur le logement, mais plainte sur une livraison sans lien avec le séjour.
+
+2. Répétitions : moyenne sur 3 lots de 34 réponses (un lot = une réponse par avis, comme une vraie semaine)
+   Commencent par la même formule : 52% des réponses d'un lot (« nous vous remercions »)
+   Contiennent « nous vous remercions », n'importe où : 52%
+   Contiennent « sincèrement désolés », n'importe où : 31%
+   Les mêmes mesures, par palier de note :
+   - Notes 1-4 (12 réponses par lot) : même début 100%, « nous vous remercions » 100%, « sincèrement désolés » 86%
+   - Notes 5-6 (5 réponses par lot) : même début 60%, « nous vous remercions » 47%, « sincèrement désolés » 0%
+   - Notes 7-8 (9 réponses par lot) : même début 52%, « nous vous remercions » 15%, « sincèrement désolés » 0%
+   - Notes 9-10 (8 réponses par lot) : même début 46%, « nous vous remercions » 25%, « sincèrement désolés » 4%
+
+3. Score de confiance
+   De 50 à 95, écart-type 9.6, 85 dans 32% des cas
+   Score dans la fourchette prévue pour son avis (dataset.json) : 69% des réponses
+   Score moyen avec défaut : 82.4 (52 réponses), sans défaut : 86.1 (50 réponses)
+
+4. Juge (gpt-4o, juge_v1) : réponses en défaut
+   promesse_action : 43
+   compensation : 0
+   enquete : 12
+   aveu_faute : 2
+   contradiction_ignoree : 8
+   Les raisons du juge sont dans le rapport complet (resume > juge > passages).

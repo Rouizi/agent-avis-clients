@@ -30,6 +30,9 @@ cd agent && python pipeline.py --limite 20 # traite au plus 20 avis, les plus an
 cd agent && python pipeline.py --rejouer   # rejoue les avis en erreur
 cd agent && uvicorn pipeline:app --port 8001   # POST /run-pipeline, POST /rejouer-erreurs, GET /run-status
 
+# Évaluation : mesure le prompt indiqué dans agent/config.yaml (appelle OpenAI, sans toucher aux bases ni au PMS)
+cd eval && python run_eval.py    # écrit dans eval/resultats/ le rapport complet (.json) et son résumé (.txt), et affiche le résumé
+
 # Tests sans OpenAI, ni vraie base, ni clé à définir (faux LLM, bases temporaires). Pas de linter configuré.
 pytest tests/                                      # depuis la racine du projet
 pytest tests/test_pipeline.py -k limite            # un seul fichier, filtré par nom de test
@@ -46,7 +49,8 @@ Deux systèmes séparés, chacun avec sa base SQLite :
 - **`mock_pms/`** simule le PMS externe du client. `mock_pms.db` n'est accessible que par son API HTTP, comme un vrai PMS. Il ne connaît que les 3 statuts du CDC. Transitions imposées par le serveur : `en_attente_evaluation` → `en_attente_publication` (`PATCH /reviews/{id}/statut`) → `publié` (uniquement `POST /reviews/{id}/publish`).
 - **`agent/`** est le cœur du projet. `agent_internal.db` contient le détail du pipeline : table `avis` (état courant) et table `logs` (journal de chaque action).
 - **`admin/`** (Flask, pas encore écrit) lit et écrit directement `agent_internal.db`, et n'appelle le PMS par HTTP qu'après validation humaine, pour publier. Sur un rejet, il appelle `pipeline.regenerer()`.
-- **`eval/`** et **`n8n/`** ne sont pas encore écrits. n8n appelle `POST /run-pipeline` sur le port 8001.
+- **`eval/`** mesure une version de prompt sur un jeu de test annoté (`dataset.json`). Chaque réponse est contrôlée de deux façons : des règles mécaniques dans `metriques.py` (sans LLM : longueur, tutoiement, français, détail cité, mots interdits du cas) et un LLM juge dans `juge.py` (gpt-4o, température 0) pour les engagements risqués, l'aveu de faute et la contradiction entre note et texte. La grille du juge est versionnée dans `eval/prompts/` (`juge_v1.yaml`, avec la liste des critères), ses réglages et les règles sont dans `criteres.yaml`. Une réponse que le juge n'a pas pu juger est exclue du % sans défaut. `run_reel_v1.json` est une copie figée du premier test réel. Ses chiffres se comparent entre versions de prompt : le jeu est chargé en cas difficiles et ne représente pas un lot réel.
+- **`n8n/`** n'est pas encore écrit. n8n appelle `POST /run-pipeline` sur le port 8001.
 
 Déroulement d'un run (`agent/pipeline.py`) : récupération des avis `en_attente_evaluation`, puis pour chacun, des plus anciens aux plus récents : garde-fous (`guardrails.evaluer_avis`), puis génération (`llm_client.generer_reponse`). L'agent ne modifie jamais le statut côté PMS : un avis déjà traité reste renvoyé par le PMS, et c'est `review_id_pms` dans `agent_internal.db` qui évite de le retraiter.
 
@@ -64,7 +68,7 @@ Les flags sont indépendants et peuvent coexister. Un avis très négatif reçoi
 ## Conventions et pièges
 
 - **Valeurs métier :** seuils, tons, retries et modèle sont dans `agent/config.yaml`, jamais en dur dans le code Python.
-- **Versions de prompts :** elles sont dans `agent/prompts/` et sélectionnées par `config.yaml`. Une fois l'éval en place, toute modification passe par un nouveau fichier (`v2.yaml`) pour pouvoir comparer les versions.
+- **Versions de prompts :** elles sont dans `agent/prompts/` et sélectionnées par `config.yaml`. Une fois l'éval en place, toute modification passe par un nouveau fichier (`v2.yaml`) pour pouvoir comparer les versions. Même règle pour la grille du juge (`eval/prompts/juge_v2.yaml`, sélectionnée par `criteres.yaml`) : changer la grille change les chiffres, donc deux rapports ne se comparent que s'ils ont le même `prompt_juge`.
 - **Score de confiance :** il note la réponse générée, pas l'avis, et vient du même appel LLM que la réponse. La difficulté de l'avis est portée par les flags.
 - **Enums en SQL brut :** `SAEnum` stocke le **nom** de l'enum, pas sa valeur. Écrire `'VALIDE'`, `'SYNCHRONISE_PMS'`, `'OK'`, et non `'validé'`, `'synchronisé_pms'`, `'ok'`.
 - **Statistiques :** les calculer depuis les colonnes structurées, jamais en parsant `logs.details`.

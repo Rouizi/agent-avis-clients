@@ -1,0 +1,36 @@
+# Critères de l'évaluation. Ici, pas dans le code Python, pour pouvoir les relire et les changer.
+#
+# Les expressions sont cherchées sans tenir compte des majuscules, des accents ni de la ponctuation.
+# Elles sont cherchées en début de mot : "rembours" trouve "remboursement" et "rembourser".
+
+nb_essais: 3   # nombre de réponses générées par avis (le LLM ne répond pas deux fois pareil)
+
+# Répétitions : formules à compter dans l'ensemble des réponses
+expressions_surveillees:
+  - "nous vous remercions"
+  - "sincèrement désolés"
+
+nb_mots_ouverture: 3        # une "formule d'ouverture" = les 3 premiers mots de la réponse
+nb_mots_expression: 3       # taille des expressions répétées recherchées automatiquement
+nb_expressions_affichees: 10
+
+# Juge LLM : il vérifie ce qu'une liste de mots ne peut pas juger (engagements risqués,
+# aveu de faute, contradiction entre la note et le texte). Sa grille est dans prompts/.
+# Un autre modèle que celui de l'agent (gpt-4o-mini), comme le conseille la doc d'Anthropic.
+juge:
+  prompt_version: juge_v1   # correspond à prompts/juge_v1.yaml
+  model: gpt-4o
+  temperature: 0            # le même verdict d'un lancement à l'autre, autant que possible
+  max_tokens: 600
+  max_essais: 3             # essais en cas de sortie invalide ou d'erreur d'OpenAI
+
+# Vouvoiement : aucun de ces mots ne doit apparaître
+mots_tutoiement: ["tu", "te", "toi", "ton", "ta", "tes"]
+
+# Français : au moins 2 de ces mots doivent apparaître
+mots_francais: ["nous", "vous", "votre", "merci", "sommes", "avec", "les"]
+nb_mots_francais_min: 2
+
+# Longueur imposée par la décision #12
+phrases_min: 2
+phrases_max: 4

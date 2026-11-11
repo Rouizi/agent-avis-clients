@@ -1,0 +1,222 @@
+[
+  {
+    "review_id_pms": 7,
+    "note": 6,
+    "commentaire": "Le logement était bien, mais le bruit des voisins était dérangeant.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": false,
+    "score_confiance": 80,
+    "reponse": "Nous vous remercions pour votre retour. Nous sommes heureux que le logement vous ait convenu, mais nous regrettons que le bruit des voisins ait été dérangeant durant votre séjour. Nous prendrons en compte votre remarque pour améliorer l'expérience de nos futurs voyageurs.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 8,
+    "note": 10,
+    "commentaire": "Un accueil chaleureux et un appartement magnifique, j'ai adoré !",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": false,
+    "score_confiance": 95,
+    "reponse": "Un grand merci pour votre retour élogieux ! Nous sommes ravis que vous ayez apprécié l'accueil chaleureux et la beauté de l'appartement. Ce fut un plaisir de vous accueillir, et nous espérons vous revoir très bientôt !",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 13,
+    "note": 2,
+    "commentaire": "Expérience négative, personnel peu réactif aux demandes.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": true,
+    "score_confiance": 85,
+    "reponse": "Nous vous remercions d'avoir partagé votre expérience et sommes sincèrement désolés d'apprendre que notre personnel n'a pas été réactif à vos demandes. Nous comprenons à quel point cela peut être frustrant et nous nous excusons pour cette situation. Vos retours sont précieux et nous permettront d'améliorer notre service.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 29,
+    "note": 7,
+    "commentaire": "Séjour agréable, mais un peu bruyant le soir. Sinon, très bon rapport qualité-prix.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": false,
+    "score_confiance": 88,
+    "reponse": "Merci beaucoup pour votre retour chaleureux ! Nous sommes ravis que vous ayez trouvé votre séjour agréable et que le rapport qualité-prix vous ait satisfait. Nous prenons note du bruit le soir et espérons vous accueillir à nouveau pour une expérience encore meilleure.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 32,
+    "note": 4,
+    "commentaire": "Déçu par la propreté. Pas le niveau attendu par rapport aux photos.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": false,
+    "score_confiance": 85,
+    "reponse": "Nous vous remercions d'avoir pris le temps de partager votre avis et sommes sincèrement désolés d'apprendre que la propreté de l'établissement n'était pas à la hauteur de vos attentes. Nous prenons vos remarques très au sérieux et allons travailler à améliorer cet aspect. Nous espérons avoir l'occasion de vous accueillir à nouveau dans de meilleures conditions.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 33,
+    "note": 3,
+    "commentaire": "L'accueil était froid et l'appartement manquait d'entretien. Ne recommanderais pas.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": true,
+    "score_confiance": 80,
+    "reponse": "Nous vous remercions d'avoir pris le temps de partager votre avis. Nous sommes sincèrement désolés que l'accueil n'ait pas été chaleureux et que l'entretien de l'appartement n'ait pas été à la hauteur de vos attentes. Vos remarques sont précieuses pour nous aider à nous améliorer.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 35,
+    "note": 1,
+    "commentaire": "A fuir ! L'appartement était sale et mal entretenu. Très déçu.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": true,
+    "score_confiance": 85,
+    "reponse": "Nous vous remercions d'avoir pris le temps de partager votre expérience, même si nous sommes sincèrement désolés d'apprendre que l'appartement n'était pas à la hauteur de vos attentes en termes de propreté et d'entretien. Nous comprenons votre déception et transmettrons vos remarques à notre équipe pour qu'elles soient prises en compte. Nous espérons avoir l'occasion de vous offrir une meilleure expérience à l'avenir.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 52,
+    "note": 9,
+    "commentaire": "Un séjour magnifique, l'appartement était parfait et très bien situé !",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": false,
+    "score_confiance": 95,
+    "reponse": "Un grand merci pour votre commentaire élogieux ! Nous sommes ravis que l'appartement ait été parfait pour vous et que son emplacement vous ait plu. Ce sera un plaisir de vous accueillir à nouveau pour un nouveau séjour magnifique !",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 60,
+    "note": 1,
+    "commentaire": "Horrible, l'appartement était en très mauvais état et pas propre.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": true,
+    "score_confiance": 90,
+    "reponse": "Nous vous remercions d'avoir pris le temps de partager votre expérience et sommes sincèrement désolés d'apprendre que l'état de l'appartement et la propreté n'ont pas été à la hauteur de vos attentes. Vos remarques sont très importantes pour nous et nous allons les transmettre à nos équipes pour qu'elles puissent y remédier. Nous espérons que vous nous donnerez une nouvelle chance à l'avenir.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 64,
+    "note": 4,
+    "commentaire": "Pas mal, mais il y avait des problèmes d'eau chaude.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": false,
+    "score_confiance": 85,
+    "reponse": "Nous vous remercions pour votre retour et sommes sincèrement désolés d'apprendre que vous avez rencontré des problèmes d'eau chaude durant votre séjour. Nous comprenons à quel point cela peut être frustrant et nous allons nous assurer que cela soit vérifié. Nous espérons avoir l'occasion de vous accueillir à nouveau dans de meilleures conditions.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 80,
+    "note": 2,
+    "commentaire": "Déçu par la propreté. La salle de bain n'était pas à la hauteur et nous avons dû appeler pour un problème de chauffage.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": true,
+    "score_confiance": 85,
+    "reponse": "Nous vous remercions pour votre retour et sommes sincèrement désolés d'apprendre que la propreté de votre logement n'était pas satisfaisante et que la salle de bain n'était pas à la hauteur. Nous comprenons à quel point un problème de chauffage peut être frustrant et nous vous prions de bien vouloir nous excuser pour ces désagréments. Vos commentaires sont précieux pour nous améliorer.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 82,
+    "note": 1,
+    "commentaire": "L'appartement était sale à notre arrivée. Les photos ne correspondaient pas du tout à la réalité.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": true,
+    "score_confiance": 85,
+    "reponse": "Nous vous remercions d'avoir pris le temps de partager votre expérience, et nous vous présentons nos plus sincères excuses pour la propreté de l'appartement à votre arrivée. Nous prenons très au sérieux vos commentaires concernant la non-conformité des photos et allons travailler à améliorer ces points. Votre retour est précieux pour nous et nous espérons pouvoir vous offrir une meilleure expérience à l'avenir.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 102,
+    "note": 10,
+    "commentaire": "Un séjour parfait ! L'appartement était propre et bien situé. Je recommande vivement.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": false,
+    "score_confiance": 95,
+    "reponse": "Un immense merci pour votre retour élogieux ! Nous sommes ravis que la propreté de l'appartement et son emplacement vous aient plu. Ce fut un plaisir de vous accueillir, et nous espérons vous revoir très bientôt !",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 114,
+    "note": 8,
+    "commentaire": "Très agréable, juste un peu bruyant le soir. Sinon, tout était au top !",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": false,
+    "score_confiance": 90,
+    "reponse": "Un grand merci pour votre retour chaleureux ! Nous sommes ravis que votre séjour ait été très agréable et que tout ait été au top. Nous prenons note de la remarque concernant le bruit le soir et espérons vous accueillir à nouveau bientôt.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 116,
+    "note": 6,
+    "commentaire": "Séjour correct, mais j'ai trouvé le lit inconfortable. Hôte disponible et serviable.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": false,
+    "score_confiance": 80,
+    "reponse": "Merci d'avoir pris le temps de partager votre avis. Nous sommes ravis que vous ayez trouvé notre hôte disponible et serviable, mais nous regrettons que le lit n'ait pas été à votre convenance. Nous prenons note de vos remarques pour améliorer le confort de nos logements.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 119,
+    "note": 3,
+    "commentaire": "Très triste d'avoir choisi cet endroit. Les équipements étaient obsolètes.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": true,
+    "score_confiance": 85,
+    "reponse": "Nous vous remercions d'avoir pris le temps de partager votre avis et sommes sincèrement désolés d'apprendre que les équipements obsolètes ont terni votre expérience. Nous comprenons votre déception et prenons vos remarques très au sérieux. Votre retour nous aidera à améliorer notre offre à l'avenir.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 126,
+    "note": 6,
+    "commentaire": "C'était correct, mais je ne conseillerai pas forcément cet endroit.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": false,
+    "score_confiance": 75,
+    "reponse": "Nous vous remercions d'avoir pris le temps de laisser un avis. Nous sommes heureux que votre séjour ait été correct, mais nous regrettons qu'il n'ait pas pleinement répondu à vos attentes. Vos retours sont précieux pour nous, et nous espérons avoir l'opportunité de vous offrir une meilleure expérience à l'avenir.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 140,
+    "note": 1,
+    "commentaire": "Une expérience horrible ! Le logement était insalubre. À fuir.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": true,
+    "score_confiance": 85,
+    "reponse": "Nous vous remercions d'avoir partagé votre avis et sommes sincèrement désolés d'apprendre que votre expérience a été aussi négative. Nous prenons très au sérieux vos commentaires concernant l'insalubrité du logement et allons enquêter sur cette situation. Nous espérons avoir l'occasion de vous prouver notre engagement envers la qualité à l'avenir.",
+    "prompt_version": "v1"
+  },
+  {
+    "review_id_pms": 166,
+    "note": 9,
+    "commentaire": "Super appartement ! Mais j'ai été un peu déçu par la livraison de mes courses qui était en retard.",
+    "flag_hors_sujet": true,
+    "raison_hors_sujet": "Mention positive sur l'appartement, mais plainte sur une livraison sans lien direct avec le séjour.",
+    "flag_surveillance": false,
+    "score_confiance": null,
+    "reponse": null,
+    "prompt_version": null
+  },
+  {
+    "review_id_pms": 173,
+    "note": 3,
+    "commentaire": "Very disappointing. The location was noisy and check-in was a hassle.",
+    "flag_hors_sujet": false,
+    "raison_hors_sujet": null,
+    "flag_surveillance": true,
+    "score_confiance": 85,
+    "reponse": "Nous vous remercions pour votre retour et sommes sincèrement désolés d'apprendre que votre expérience n'a pas été à la hauteur de vos attentes, notamment en ce qui concerne le bruit et les difficultés lors du check-in. Nous prenons vos remarques très au sérieux et allons travailler pour améliorer ces points. Nous espérons que vous nous donnerez une nouvelle chance à l'avenir.",
+    "prompt_version": "v1"
+  }
+]
