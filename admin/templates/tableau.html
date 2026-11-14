@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block titre %}Tableau de bord{% endblock %}
+{% macro pct(valeur) %}{{ "—" if valeur is none else ((valeur * 100) | round | int) ~ " %" }}{% endmacro %}
+{% block contenu %}
+<h1>Tableau de bord</h1>
+<p class="aide">{{ stats.nb_avis }} avis enregistrés par l'agent, dont {{ stats.nb_valides }} validés. « — » : rien à compter pour l'instant.</p>
+
+<div class="chiffres">
+  <div class="carte chiffre">
+    <div class="valeur">{{ pct(stats.taux_de_retouche) }}</div>
+    <div class="libelle">Taux de retouche : réponses de l'agent modifiées avant validation</div>
+  </div>
+  <div class="carte chiffre">
+    <div class="valeur">{{ pct(stats.part_automatisee) }}</div>
+    <div class="libelle">Avis automatisés : ni régénération, ni doublon, ni hors-sujet, ni erreur</div>
+  </div>
+  <div class="carte chiffre">
+    <div class="valeur">{{ pct(stats.taux_de_regeneration) }}</div>
+    <div class="libelle">Réponses rejetées au moins une fois</div>
+  </div>
+</div>
+
+<div class="carte">
+  <h2 style="font-size: 17px; margin-top: 0;">Flags</h2>
+  <table>
+    {% for nom, nombre in stats.flags.items() %}
+    <tr><td>{{ nom }}</td><td class="nombre">{{ nombre }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="carte">
+  <h2 style="font-size: 17px; margin-top: 0;">Délai de publication ({{ limite_jours }} jours après l'avis)</h2>
+  <table>
+    <tr><td>Validés à temps</td><td class="nombre">{{ stats.delais.valides_a_temps }}</td></tr>
+    <tr><td>Validés de justesse (proches de la limite)</td><td class="nombre">{{ stats.delais.valides_de_justesse }}</td></tr>
+    <tr><td>Validés en retard</td><td class="nombre">{{ stats.delais.valides_en_retard }}</td></tr>
+    <tr><td>En attente, limite déjà dépassée</td><td class="nombre">{{ stats.delais.en_attente_en_retard }}</td></tr>
+  </table>
+</div>
+
+<div class="carte">
+  <h2 style="font-size: 17px; margin-top: 0;">Par semaine</h2>
+  {% if stats.par_semaine %}
+  <table>
+    <tr><th>Semaine</th><th class="nombre">Avis traités</th><th class="nombre">Score de confiance moyen</th></tr>
+    {% for s in stats.par_semaine %}
+    <tr><td>{{ s.semaine }}</td><td class="nombre">{{ s.volume }}</td>
+        <td class="nombre">{{ "—" if s.score_moyen is none else "%.1f"|format(s.score_moyen) }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="vide">Aucun avis pour l'instant.</p>{% endif %}
+</div>
+{% endblock %}

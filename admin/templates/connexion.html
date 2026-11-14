@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titre %}Connexion{% endblock %}
+{% block contenu %}
+<div class="carte" style="max-width: 360px; margin: 60px auto;">
+  <h1>Connexion</h1>
+  <p class="aide">Interface de validation des réponses aux avis.</p>
+  <form method="post">
+    <label for="mot_de_passe">Mot de passe</label>
+    <input id="mot_de_passe" name="mot_de_passe" type="password" required autofocus
+           style="width: 100%; padding: 8px; font: inherit; border: 1px solid var(--bord); border-radius: 6px; margin: 4px 0 12px;">
+    <button type="submit">Se connecter</button>
+  </form>
+</div>
+{% endblock %}

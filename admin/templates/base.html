@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titre %}Validation des avis{% endblock %}</title>
+  <style>
+    :root { --fond: #f6f7f9; --carte: #fff; --texte: #1d2330; --gris: #667085; --bord: #e3e6eb;
+            --bleu: #2f5fd0; --vert: #1f8a4c; --rouge: #c0392b; --orange: #b86e00; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px/1.5 system-ui, sans-serif; background: var(--fond); color: var(--texte); }
+    nav { background: var(--texte); padding: 0 16px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+    nav a { color: #cfd5e1; text-decoration: none; padding: 12px 10px; }
+    nav a.actif, nav a:hover { color: #fff; }
+    nav .droite { margin-left: auto; }
+    .compte { background: #3b4458; border-radius: 10px; padding: 1px 7px; font-size: 12px; }
+    main { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    .aide { color: var(--gris); margin: 0 0 20px; }
+    .carte { background: var(--carte); border: 1px solid var(--bord); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .entete { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--gris); font-size: 13px; margin-bottom: 8px; }
+    .note { font-weight: 600; color: var(--texte); font-size: 15px; }
+    .badge { border-radius: 4px; padding: 1px 6px; font-size: 12px; font-weight: 600; }
+    .badge.rouge { background: #fde8e6; color: var(--rouge); }
+    .badge.orange { background: #fff1db; color: var(--orange); }
+    .badge.bleu { background: #e6edfc; color: var(--bleu); }
+    blockquote { margin: 0 0 12px; padding: 8px 12px; border-left: 3px solid var(--bord); background: var(--fond); }
+    textarea { width: 100%; min-height: 110px; font: inherit; padding: 8px; border: 1px solid var(--bord); border-radius: 6px; }
+    label { font-size: 13px; color: var(--gris); }
+    .boutons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    button { font: inherit; border: 0; border-radius: 6px; padding: 7px 14px; cursor: pointer; color: #fff; background: var(--bleu); }
+    button.vert { background: var(--vert); } button.rouge { background: var(--rouge); } button.gris { background: var(--gris); }
+    form.enligne { display: inline; }
+    .message { padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; }
+    .message.ok { background: #e3f4ea; color: var(--vert); } .message.erreur { background: #fde8e6; color: var(--rouge); }
+    .vide { color: var(--gris); text-align: center; padding: 32px; }
+    .chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .chiffre .valeur { font-size: 28px; font-weight: 700; }
+    .chiffre .libelle { color: var(--gris); font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--bord); }
+    td.nombre, th.nombre { text-align: right; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  {% if session.connecte %}
+  <nav>
+    <a href="{{ url_for('validation') }}" class="{{ 'actif' if request.endpoint == 'validation' }}">À valider <span class="compte">{{ compteurs.validation }}</span></a>
+    <a href="{{ url_for('revue') }}" class="{{ 'actif' if request.endpoint == 'revue' }}">Revue manuelle <span class="compte">{{ compteurs.revue }}</span></a>
+    <a href="{{ url_for('manuel') }}" class="{{ 'actif' if request.endpoint == 'manuel' }}">À traiter manuellement <span class="compte">{{ compteurs.manuel }}</span></a>
+    <a href="{{ url_for('tableau_de_bord') }}" class="{{ 'actif' if request.endpoint == 'tableau_de_bord' }}">Tableau de bord</a>
+    <a href="{{ url_for('deconnexion') }}" class="droite">Déconnexion</a>
+  </nav>
+  {% endif %}
+  <main>
+    {% for categorie, message in get_flashed_messages(with_categories=true) %}
+      <div class="message {{ categorie }}">{{ message }}</div>
+    {% endfor %}
+    {% block contenu %}{% endblock %}
+  </main>
+</body>
+</html>

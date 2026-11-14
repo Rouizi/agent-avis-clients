@@ -47,6 +47,7 @@ class ActionLog(str, enum.Enum):
     PUBLIE = "publié"
     ERREUR_FINALE = "erreur_finale"
     SIGNALE = "signalé"
+    ECARTE = "écarté"  # doublon ou hors-sujet écarté par l'humain en revue manuelle
 
 
 class Acteur(str, enum.Enum):

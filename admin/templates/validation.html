@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "_avis.html" import avis_original %}
+{% block titre %}À valider{% endblock %}
+{% block contenu %}
+
+{% if a_refaire %}
+<h1>Publication à refaire</h1>
+<p class="aide">Ces réponses sont validées, mais le PMS ne les a pas acceptées.</p>
+{% for a in a_refaire %}
+<div class="carte">
+  {{ avis_original(a) }}
+  <p><strong>Réponse validée :</strong> {{ a.reponse_validee }}</p>
+  <form method="post" action="{{ url_for('republier', avis_id=a.id) }}">
+    <button type="submit">Publier à nouveau</button>
+  </form>
+</div>
+{% endfor %}
+{% endif %}
+
+<h1>À valider</h1>
+<p class="aide">Les plus urgents d'abord. Modifie la réponse si besoin avant de valider : chaque modification compte dans le taux de retouche.</p>
+
+{% for a in avis %}
+<div class="carte">
+  {{ avis_original(a) }}
+  <form method="post" action="{{ url_for('valider', avis_id=a.id) }}">
+    <label for="reponse-{{ a.id }}">Réponse de l'agent · score de confiance {{ a.score_confiance if a.score_confiance is not none else "?" }}/100</label>
+    <textarea id="reponse-{{ a.id }}" name="reponse">{{ a.reponse_generee }}</textarea>
+    <div class="boutons">
+      <button type="submit" class="vert">Valider et publier</button>
+      <button type="submit" class="rouge" formaction="{{ url_for('rejeter', avis_id=a.id) }}">Rejeter et régénérer</button>
+    </div>
+  </form>
+</div>
+{% else %}
+<div class="carte vide">Aucune réponse à valider.</div>
+{% endfor %}
+{% endblock %}

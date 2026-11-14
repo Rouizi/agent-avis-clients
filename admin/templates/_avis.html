@@ -1,0 +1,15 @@
+{# L'en-tête et le texte d'un avis, communs à toutes les files. #}
+{% macro avis_original(a) %}
+  <div class="entete">
+    <span class="note">{{ a.note }}/10</span>
+    <span>{{ a.plateforme.value }}</span>
+    <span>avis du {{ a.date_avis.strftime('%d/%m/%Y') }} ({{ age_en_jours(a) }} jours)</span>
+    {% if age_en_jours(a) > limite_jours %}<span class="badge rouge">délai de {{ limite_jours }} jours dépassé</span>
+    {% elif est_prioritaire(a.date_avis) %}<span class="badge orange">prioritaire : proche des {{ limite_jours }} jours</span>{% endif %}
+    {% if a.flag_surveillance %}<span class="badge rouge">à surveiller</span>{% endif %}
+    {% if a.flag_doublon %}<span class="badge bleu">doublon</span>{% endif %}
+    {% if a.flag_hors_sujet %}<span class="badge bleu">hors-sujet</span>{% endif %}
+    {% if a.nb_tentatives_regen %}<span class="badge orange">régénérée {{ a.nb_tentatives_regen }} fois</span>{% endif %}
+  </div>
+  <blockquote>{{ a.texte_avis }}</blockquote>
+{% endmacro %}

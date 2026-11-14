@@ -8,6 +8,8 @@ Projet de portfolio : un agent IA traite 200 avis clients par semaine pour un ge
 
 Ce qui compte le plus est la **mesure** (taux de retouche humaine, % automatisé, jeu de cas de test avec réponses attendues), pas la démo. La logique métier reste en Python testable ; n8n ne sert qu'à déclencher le pipeline.
 
+`REPRISE.md` dit où en est le projet, les chiffres de la v1 et les étapes restantes : le lire en début de session.
+
 `cdc-notes.md` contient le cadrage et les 12 décisions sur les zones grises du CDC (section 4). Sur ces points de comportement, il fait référence. Ses sections architecture et stack sont en partie dépassées : voir « Architecture » ci-dessous.
 
 ## Commandes
@@ -23,6 +25,9 @@ Les imports sont à plat : lancer chaque service **depuis son propre dossier**.
 cd mock_pms && uvicorn main:app --port 8000
 cd mock_pms && python seed_data.py    # appelle OpenAI et AJOUTE des avis à chaque lancement
 cd mock_pms && python decaler_dates.py   # redate les avis en attente (0 à 16 jours), à lancer juste avant un test
+
+# Interface de validation Flask (port 5000 ; le mock PMS doit tourner pour publier, un rejet appelle OpenAI)
+cd admin && ADMIN_MOT_DE_PASSE=... flask --app app run --port 5000   # ADMIN_SECRET_KEY optionnelle
 
 # Agent (le mock PMS doit tourner)
 cd agent && python pipeline.py             # un run complet
@@ -48,7 +53,7 @@ Deux systèmes séparés, chacun avec sa base SQLite :
 
 - **`mock_pms/`** simule le PMS externe du client. `mock_pms.db` n'est accessible que par son API HTTP, comme un vrai PMS. Il ne connaît que les 3 statuts du CDC. Transitions imposées par le serveur : `en_attente_evaluation` → `en_attente_publication` (`PATCH /reviews/{id}/statut`) → `publié` (uniquement `POST /reviews/{id}/publish`).
 - **`agent/`** est le cœur du projet. `agent_internal.db` contient le détail du pipeline : table `avis` (état courant) et table `logs` (journal de chaque action).
-- **`admin/`** (Flask, pas encore écrit) lit et écrit directement `agent_internal.db`, et n'appelle le PMS par HTTP qu'après validation humaine, pour publier. Sur un rejet, il appelle `pipeline.regenerer()`.
+- **`admin/`** (Flask) lit et écrit directement `agent_internal.db`, et n'appelle le PMS par HTTP qu'après validation humaine, pour publier (`PATCH` puis `POST /publish` ; un nouvel essai tolère les 409 d'une étape déjà passée). Sur un rejet, il appelle `pipeline.regenerer()`. Un seul compte, mot de passe dans `ADMIN_MOT_DE_PASSE`. Pages : `/` (file de validation, plus les publications à refaire), `/revue` (doublons et hors-sujet : écarter, ou y répondre à la main), `/manuel`, `/tableau-de-bord`. Les chiffres du tableau de bord sont dans `admin/statistiques.py` (fonctions pures sur une liste d'avis). Il ajoute `agent/` à `sys.path` et lit `pipeline.engine` à chaque requête, ce que les tests remplacent.
 - **`eval/`** mesure une version de prompt sur un jeu de test annoté (`dataset.json`). Chaque réponse est contrôlée de deux façons : des règles mécaniques dans `metriques.py` (sans LLM : longueur, tutoiement, français, détail cité, mots interdits du cas) et un LLM juge dans `juge.py` (gpt-4o, température 0) pour les engagements risqués, l'aveu de faute et la contradiction entre note et texte. La grille du juge est versionnée dans `eval/prompts/` (`juge_v1.yaml`, avec la liste des critères), ses réglages et les règles sont dans `criteres.yaml`. Une réponse que le juge n'a pas pu juger est exclue du % sans défaut. `run_reel_v1.json` est une copie figée du premier test réel. Ses chiffres se comparent entre versions de prompt : le jeu est chargé en cas difficiles et ne représente pas un lot réel.
 - **`n8n/`** n'est pas encore écrit. n8n appelle `POST /run-pipeline` sur le port 8001.
 

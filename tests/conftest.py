@@ -17,7 +17,8 @@ import pytest
 import requests
 
 RACINE = Path(__file__).parents[1]
-sys.path[:0] = [str(RACINE / "agent"), str(RACINE / "mock_pms"), str(RACINE / "eval")]
+sys.path[:0] = [str(RACINE / "agent"), str(RACINE / "mock_pms"), str(RACINE / "eval"),
+                str(RACINE / "admin")]
 os.environ["OPENAI_API_KEY"] = "faux-pour-test"  # le client OpenAI est créé à l'import
 
 import db_models

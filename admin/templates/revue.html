@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_avis.html" import avis_original %}
+{% block titre %}Revue manuelle{% endblock %}
+{% block contenu %}
+<h1>Revue manuelle</h1>
+<p class="aide">L'agent n'a pas répondu à ces avis : il les a signalés comme doublon ou hors-sujet. Écarte-les si c'est juste, sinon réponds toi-même.</p>
+
+{% for a in avis %}
+<div class="carte">
+  {{ avis_original(a) }}
+  {% if a.raison_hors_sujet %}<p><strong>Raison du classifieur :</strong> {{ a.raison_hors_sujet }}</p>{% endif %}
+  <div class="boutons">
+    <form class="enligne" method="post" action="{{ url_for('ecarter', avis_id=a.id) }}">
+      <button type="submit" class="gris">Écarter (aucune réponse)</button>
+    </form>
+    <form class="enligne" method="post" action="{{ url_for('repondre_a_la_main', avis_id=a.id) }}">
+      <button type="submit">Signalement faux : y répondre</button>
+    </form>
+  </div>
+</div>
+{% else %}
+<div class="carte vide">Aucun avis signalé.</div>
+{% endfor %}
+{% endblock %}

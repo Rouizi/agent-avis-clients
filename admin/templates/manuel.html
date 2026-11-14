@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "_avis.html" import avis_original %}
+{% block titre %}À traiter manuellement{% endblock %}
+{% block contenu %}
+<h1>À traiter manuellement</h1>
+<p class="aide">Réponses rejetées trop de fois, ou avis signalés à tort : écris la réponse toi-même.</p>
+
+{% for a in avis %}
+<div class="carte">
+  {{ avis_original(a) }}
+  <form method="post" action="{{ url_for('valider', avis_id=a.id) }}">
+    <input type="hidden" name="retour" value="{{ url_for('manuel') }}">
+    <label for="reponse-{{ a.id }}">
+      {% if a.reponse_generee %}Dernière réponse de l'agent (rejetée), à réécrire{% else %}Ta réponse{% endif %}
+    </label>
+    <textarea id="reponse-{{ a.id }}" name="reponse">{{ a.reponse_generee or "" }}</textarea>
+    <div class="boutons">
+      <button type="submit" class="vert">Valider et publier</button>
+    </div>
+  </form>
+</div>
+{% else %}
+<div class="carte vide">Rien à traiter manuellement.</div>
+{% endfor %}
+{% endblock %}
