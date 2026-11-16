@@ -8,8 +8,6 @@ Projet de portfolio : un agent IA traite 200 avis clients par semaine pour un ge
 
 Ce qui compte le plus est la **mesure** (taux de retouche humaine, % automatisé, jeu de cas de test avec réponses attendues), pas la démo. La logique métier reste en Python testable ; n8n ne sert qu'à déclencher le pipeline.
 
-`REPRISE.md` dit où en est le projet, les chiffres de la v1 et les étapes restantes : le lire en début de session.
-
 `cdc-notes.md` contient le cadrage et les 12 décisions sur les zones grises du CDC (section 4). Sur ces points de comportement, il fait référence. Ses sections architecture et stack sont en partie dépassées : voir « Architecture » ci-dessous.
 
 ## Commandes

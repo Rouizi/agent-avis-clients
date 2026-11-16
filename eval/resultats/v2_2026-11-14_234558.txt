@@ -1,0 +1,31 @@
+
+=== Prompt v2 : 39 cas, 102 réponses, 0 erreurs ===
+Réponses sans aucun défaut : 79% (sur les réponses jugées ; 0 erreurs du juge)
+
+1. Hors-sujet
+   Faux positifs : 2, faux négatifs : 0, erreurs techniques : 0
+   - risque_justice : Plainte concernant la caution, sans mention du séjour ou du logement.
+   - contradiction_note_haute : Avis très négatif, mais ne précise pas les raisons de la déception concernant le séjour ou le logement.
+
+2. Répétitions : moyenne sur 3 lots de 34 réponses (un lot = une réponse par avis, comme une vraie semaine)
+   Commencent par la même formule : 24% des réponses d'un lot (« nous sommes sincerement »)
+   Contiennent « nous vous remercions », n'importe où : 13%
+   Contiennent « sincèrement désolés », n'importe où : 24%
+   Les mêmes mesures, par palier de note :
+   - Notes 1-4 (12 réponses par lot) : même début 64%, « nous vous remercions » 11%, « sincèrement désolés » 64%
+   - Notes 5-6 (5 réponses par lot) : même début 87%, « nous vous remercions » 0%, « sincèrement désolés » 0%
+   - Notes 7-8 (9 réponses par lot) : même début 56%, « nous vous remercions » 19%, « sincèrement désolés » 0%
+   - Notes 9-10 (8 réponses par lot) : même début 54%, « nous vous remercions » 17%, « sincèrement désolés » 4%
+
+3. Score de confiance
+   De 60 à 95, écart-type 8.3, 85 dans 24% des cas
+   Score dans la fourchette prévue pour son avis (dataset.json) : 70% des réponses
+   Score moyen avec défaut : 81.5 (21 réponses), sans défaut : 83.7 (81 réponses)
+
+4. Juge (gpt-4o, juge_v1) : réponses en défaut
+   promesse_action : 6
+   compensation : 0
+   enquete : 2
+   aveu_faute : 5
+   contradiction_ignoree : 5
+   Les raisons du juge sont dans le rapport complet (resume > juge > passages).
