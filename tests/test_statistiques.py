@@ -107,3 +107,12 @@ def test_par_semaine_volume_et_score_moyen():
 
     assert par_semaine(liste) == [{"semaine": "2026-S45", "volume": 2, "score_moyen": 85},
                                   {"semaine": "2026-S46", "volume": 1, "score_moyen": 70}]
+
+
+def test_automatise_un_avis_jamais_traite_ne_compte_pas():
+    # Un run interrompu laisse des avis au statut nouveau : ils ne doivent pas gonfler le chiffre
+    assert part_automatisee([avis(StatutPipeline.NOUVEAU), avis()]) == 1.0
+
+
+def test_automatise_un_avis_en_erreur_reste_au_statut_nouveau_mais_compte():
+    assert part_automatisee([avis(StatutPipeline.NOUVEAU, erreur=True), avis()]) == 0.5

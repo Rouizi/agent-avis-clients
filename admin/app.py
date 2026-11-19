@@ -38,6 +38,9 @@ from llm_client import CONFIG  # noqa: E402
 app = Flask(__name__)
 # Sans ADMIN_SECRET_KEY, une clé au hasard : il faut juste se reconnecter après un redémarrage
 app.secret_key = os.environ.get("ADMIN_SECRET_KEY") or secrets.token_hex(32)
+# Le cookie de session ne part jamais depuis un autre site : un formulaire forgé ailleurs
+# (CSRF) arrive ici sans session, donc sans droits
+app.config["SESSION_COOKIE_SAMESITE"] = "Strict"
 
 
 # --- Base de l'agent ---
@@ -68,28 +71,47 @@ def trier_par_urgence(liste):
     return sorted(liste, key=lambda a: (not est_prioritaire(a.date_avis), a.date_avis))
 
 
-def file_de_validation(db):
-    """Les réponses de l'agent à relire. Les avis en erreur n'y sont jamais (CLAUDE.md)."""
-    return trier_par_urgence(db.query(Avis).filter(
+def _requete_validation(db):
+    return db.query(Avis).filter(
         Avis.statut_pipeline == StatutPipeline.EN_VALIDATION,
         Avis.statut_erreur == StatutErreur.OK,
         Avis.reponse_generee.isnot(None),
-    ).all())
+    )
 
 
-def file_de_revue(db):
-    """Les doublons et hors-sujet : l'agent n'a pas écrit de réponse."""
-    return trier_par_urgence(db.query(Avis).filter(
+def _requete_revue(db):
+    return db.query(Avis).filter(
         Avis.statut_pipeline == StatutPipeline.EN_VALIDATION,
         Avis.statut_erreur == StatutErreur.OK,
         Avis.reponse_generee.is_(None),
         (Avis.flag_doublon == True) | (Avis.flag_hors_sujet == True),  # noqa: E712
-    ).all())
+    )
+
+
+def _requete_manuelle(db):
+    return db.query(Avis).filter(Avis.statut_pipeline == StatutPipeline.A_TRAITER_MANUELLEMENT)
+
+
+def file_de_validation(db):
+    """Les réponses de l'agent à relire. Les avis en erreur n'y sont jamais (CLAUDE.md)."""
+    return trier_par_urgence(_requete_validation(db).all())
+
+
+def file_de_revue(db):
+    """Les doublons et hors-sujet : l'agent n'a pas écrit de réponse."""
+    return trier_par_urgence(_requete_revue(db).all())
 
 
 def file_manuelle(db):
-    return trier_par_urgence(db.query(Avis).filter(
-        Avis.statut_pipeline == StatutPipeline.A_TRAITER_MANUELLEMENT).all())
+    return trier_par_urgence(_requete_manuelle(db).all())
+
+
+def en_revue_manuelle(avis):
+    """Vrai si l'avis est bien dans la file de revue (mêmes conditions que _requete_revue)."""
+    return (avis.statut_pipeline == StatutPipeline.EN_VALIDATION
+            and avis.statut_erreur == StatutErreur.OK
+            and avis.reponse_generee is None
+            and (avis.flag_doublon or avis.flag_hors_sujet))
 
 
 def publications_a_refaire(db):
@@ -186,8 +208,10 @@ def compteurs_du_menu():
         return {}
     db = ouvrir_session()
     try:
-        return {"compteurs": {"validation": len(file_de_validation(db)), "revue": len(file_de_revue(db)),
-                              "manuel": len(file_manuelle(db))}}
+        # Seulement des COUNT : pas besoin de charger ni de trier les avis pour trois nombres
+        return {"compteurs": {"validation": _requete_validation(db).count(),
+                              "revue": _requete_revue(db).count(),
+                              "manuel": _requete_manuelle(db).count()}}
     finally:
         db.close()
 
@@ -243,8 +267,12 @@ def valider(avis_id):
     Le texte validé est gardé dans reponse_validee : le comparer à reponse_generee donne le
     taux de retouche.
     """
-    retour = request.form.get("retour") or url_for("validation")
-    texte = request.form.get("reponse", "").strip()
+    # Seule notre page /manuel est un retour valable : toute autre valeur (notamment une URL
+    # externe glissée dans le formulaire) serait une redirection ouverte
+    retour = url_for("manuel") if request.form.get("retour") == url_for("manuel") else url_for("validation")
+    # Le navigateur envoie les sauts de ligne en \r\n : sans normalisation, une réponse
+    # multi-lignes validée telle quelle serait comptée « modifiée » (fausse retouche)
+    texte = request.form.get("reponse", "").replace("\r\n", "\n").strip()
     if not texte:
         flash("Une réponse vide ne peut pas être publiée.", "erreur")
         return redirect(retour)
@@ -296,7 +324,8 @@ def rejeter(avis_id):
     db = ouvrir_session()
     try:
         avis = avis_ou_404(db, avis_id)
-        if avis.statut_pipeline != StatutPipeline.EN_VALIDATION or not avis.reponse_generee:
+        if (avis.statut_pipeline != StatutPipeline.EN_VALIDATION or not avis.reponse_generee
+                or avis.statut_erreur != StatutErreur.OK):
             flash("Cet avis n'est plus à valider.", "erreur")
         elif pipeline.regenerer(db, avis):
             flash(f"Nouvelle réponse générée ({avis.nb_tentatives_regen}/"
@@ -318,6 +347,11 @@ def ecarter(avis_id):
     db = ouvrir_session()
     try:
         avis = avis_ou_404(db, avis_id)
+        # Garde-fou : un onglet resté ouvert (ou un POST forgé) ne doit pas écarter un avis
+        # déjà validé, publié ou sans signalement
+        if not en_revue_manuelle(avis):
+            flash("Cet avis n'est pas (ou plus) en revue manuelle.", "erreur")
+            return redirect(url_for("revue"))
         avis.statut_pipeline = StatutPipeline.ECARTE
         pipeline._log(db, avis.review_id_pms, ActionLog.ECARTE, Acteur.HUMAIN,
                       "doublon" if avis.flag_doublon else "hors-sujet")
@@ -335,6 +369,9 @@ def repondre_a_la_main(avis_id):
     db = ouvrir_session()
     try:
         avis = avis_ou_404(db, avis_id)
+        if not en_revue_manuelle(avis):
+            flash("Cet avis n'est pas (ou plus) en revue manuelle.", "erreur")
+            return redirect(url_for("revue"))
         avis.statut_pipeline = StatutPipeline.A_TRAITER_MANUELLEMENT
         db.commit()
         flash(f"Avis {avis.review_id_pms} déplacé dans « à traiter manuellement ».", "ok")

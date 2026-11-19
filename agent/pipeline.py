@@ -112,6 +112,11 @@ def _traiter(session, avis: Avis, commentaires_connus: list[str]) -> str:
                                        ("hors_sujet", avis.flag_hors_sujet)) if actif)
             avis.statut_pipeline = StatutPipeline.EN_VALIDATION
             avis.nb_tentatives_erreur = 0
+            # Cas du rejeu : une régénération échouée laisse une ancienne réponse rejetée.
+            # On l'efface (elle reste dans les logs), sinon l'avis signalé apparaîtrait dans
+            # la file de validation au lieu de la revue manuelle (reponse_generee doit être NULL).
+            avis.reponse_generee = None
+            avis.score_confiance = None
             details = f"{motifs} : revue manuelle, aucune réponse générée"
             if verdict["raison_hors_sujet"]:
                 details += f" | raison hors-sujet : {verdict['raison_hors_sujet']}"

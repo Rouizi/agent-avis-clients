@@ -43,7 +43,7 @@ def est_prioritaire(date_avis: date) -> bool:
     return age_jours >= CONFIG["seuils"]["delai_priorite_jours"]
 
 
-@lru_cache(maxsize=None)
+@lru_cache(maxsize=4096)  # borné : sans limite, le serveur garderait en mémoire chaque texte croisé
 def _normaliser(texte: str) -> str:
     """Minuscules, sans accents ni ponctuation, espaces réduits."""
     texte = unicodedata.normalize("NFKD", texte.lower())

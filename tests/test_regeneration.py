@@ -2,7 +2,7 @@
 import pipeline
 from db_models import ActionLog, Avis, StatutErreur, StatutPipeline, get_session
 from llm_client import LLMError
-from outils import ajouter_avis_en_base, appels_llm, avis_pms, tous_les_avis, tous_les_logs
+from outils import ajouter_avis_en_base, appels_llm, avis_pms, tous_les_avis, tous_les_logs, verdict
 
 
 def ajouter_avis_a_valider(**champs):
@@ -138,3 +138,20 @@ def test_rejouer_les_erreurs_traite_l_avis():
     assert resume["generes"] == 1
     assert avis.statut_erreur == StatutErreur.OK
     assert avis.statut_pipeline == StatutPipeline.EN_VALIDATION
+
+
+def test_un_rejeu_signale_retourne_en_revue_sans_l_ancienne_reponse(monkeypatch):
+    # Une régénération échouée laisse une ancienne réponse ; si le rejeu signale l'avis
+    # (hors-sujet), elle doit être effacée, sinon l'avis irait dans la file de validation
+    ajouter_avis_en_base(1, statut_pipeline=StatutPipeline.EN_VALIDATION,
+                         reponse_generee="Ancienne réponse rejetée",
+                         statut_erreur=StatutErreur.EN_ERREUR)
+    monkeypatch.setattr(pipeline, "evaluer_avis",
+                        lambda *args, **kwargs: verdict(hors_sujet=True, raison="spam"))
+
+    pipeline.rejouer_erreurs()
+
+    avis = tous_les_avis()[0]
+    assert avis.flag_hors_sujet
+    assert avis.reponse_generee is None
+    assert avis.statut_erreur == StatutErreur.OK

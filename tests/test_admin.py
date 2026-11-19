@@ -282,3 +282,51 @@ def test_le_tableau_de_bord_affiche_le_taux_de_retouche(navigateur):
 
     assert "50 %" in navigateur.get("/tableau-de-bord").get_data(as_text=True)
     assert len(tous_les_avis()) == 2
+
+
+# --- Corrections de la revue de code du 2026-11-16 ---
+
+def test_une_reponse_multiligne_validee_telle_quelle_n_est_pas_une_retouche(navigateur):
+    # Le navigateur renvoie les sauts de ligne en \r\n : ça ne doit pas compter comme retouche
+    avis_id = avis_a_valider(reponse_generee="Merci pour la terrasse.\nÀ bientôt.")
+
+    navigateur.post(f"/avis/{avis_id}/valider", data={"reponse": "Merci pour la terrasse.\r\nÀ bientôt."})
+
+    actions = [(log.action, log.details) for log in tous_les_logs()]
+    assert (ActionLog.VALIDE, "Réponse telle quelle") in actions
+
+
+def test_un_avis_publie_ne_peut_pas_etre_ecarte(navigateur):
+    # Un onglet resté ouvert sur la revue ne doit pas écarter un avis déjà publié
+    avis_id = avis_a_valider()
+    navigateur.post(f"/avis/{avis_id}/valider", data={"reponse": REPONSE_AGENT})
+
+    navigateur.post(f"/avis/{avis_id}/ecarter")
+
+    assert lire(avis_id).statut_pipeline == StatutPipeline.SYNCHRONISE_PMS
+
+
+def test_un_avis_publie_ne_peut_pas_repartir_en_file_manuelle(navigateur):
+    avis_id = avis_a_valider()
+    navigateur.post(f"/avis/{avis_id}/valider", data={"reponse": REPONSE_AGENT})
+
+    navigateur.post(f"/avis/{avis_id}/repondre")
+
+    assert lire(avis_id).statut_pipeline == StatutPipeline.SYNCHRONISE_PMS
+
+
+def test_un_avis_en_erreur_ne_peut_pas_etre_rejete(navigateur):
+    avis_id = avis_a_valider(statut_erreur=StatutErreur.EN_ERREUR)
+
+    navigateur.post(f"/avis/{avis_id}/rejeter")
+
+    assert lire(avis_id).reponse_generee == REPONSE_AGENT  # pas de régénération
+
+
+def test_le_champ_retour_ne_peut_pas_rediriger_vers_un_autre_site(navigateur):
+    avis_id = avis_a_valider()
+
+    reponse = navigateur.post(f"/avis/{avis_id}/valider",
+                              data={"reponse": REPONSE_AGENT, "retour": "https://site-pirate.example"})
+
+    assert reponse.headers["Location"] == "/"

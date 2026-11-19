@@ -30,6 +30,9 @@ def taux_de_retouche(avis):
     hors-sujet n'en ont pas. Un espace en plus ou en moins au début ou à la fin ne compte pas.
 
     4 avis validés : 3 validés tels quels, 1 modifié  ->  0.25
+
+    Limite connue : une réponse entièrement réécrite après 3 rejets (file manuelle) compte
+    aussi comme une retouche, car la base ne garde pas la file d'origine de la validation.
     """
     concernes = [a for a in avis if a.statut_pipeline in VALIDES and a.reponse_generee]
     modifies = [a for a in concernes
@@ -43,12 +46,18 @@ def part_automatisee(avis):
     hors-sujet, ni erreur (journal de cdc-notes.md, 2026-11-04). Elle ne tient pas compte
     des retouches, qui sont mesurées à part.
 
-    10 avis, dont 1 régénéré et 1 hors-sujet  ->  0.8
+    Un avis jamais traité (statut nouveau, sans erreur) ne compte ni en haut ni en bas :
+    sinon, un run interrompu laisserait des avis intacts qui feraient MONTER le pourcentage.
+    Un avis en erreur garde le statut nouveau, mais il a bien été tenté : il compte.
+
+    10 avis traités, dont 1 régénéré et 1 hors-sujet  ->  0.8
     """
-    automatises = [a for a in avis
+    traites = [a for a in avis if a.statut_pipeline != StatutPipeline.NOUVEAU
+               or a.statut_erreur == StatutErreur.EN_ERREUR]
+    automatises = [a for a in traites
                    if not a.nb_tentatives_regen and not a.flag_doublon and not a.flag_hors_sujet
                    and a.statut_erreur == StatutErreur.OK]
-    return part(len(automatises), len(avis))
+    return part(len(automatises), len(traites))
 
 
 def taux_de_regeneration(avis):

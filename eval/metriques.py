@@ -61,6 +61,11 @@ def phrases(texte):
     Coupe le texte en phrases, après chaque . ! ou ?
 
     "Merci ! Nous sommes ravis. À bientôt ?"  ->  ["Merci !", "Nous sommes ravis.", "À bientôt ?"]
+
+    Limite connue : une abréviation suivie d'un espace (« M. Dupont ») compterait comme une
+    fin de phrase. Vérifié le 2026-11-16 : aucune des 204 réponses des rapports v1 et v2
+    n'est concernée. On ne corrige pas cette règle en cours de route : comme pour la grille
+    du juge, changer une règle de mesure rendrait les rapports incomparables.
     """
     return re.split(r"(?<=[.!?])\s+", texte.strip())
 
