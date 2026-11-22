@@ -7,7 +7,7 @@ Lancement :
   CLI       : python pipeline.py              -> un run complet
               python pipeline.py --limite 20  -> traite au plus 20 avis (test sur un échantillon)
               python pipeline.py --rejouer    -> rejoue les avis en erreur
-  API (n8n) : uvicorn pipeline:app --port 8001
+  API (planificateur, cron) : uvicorn pipeline:app --port 8001
               POST /run-pipeline (démarre en arrière-plan), GET /run-status
 """
 import argparse
@@ -266,7 +266,7 @@ def regenerer(session, avis: Avis) -> bool:
     return True
 
 
-# --- API pour n8n ---
+# --- API pour un planificateur (cron) ---
 
 app = FastAPI(title="Agent avis clients")
 _verrou = threading.Lock()  # un seul run à la fois
@@ -295,7 +295,7 @@ def _lancer(background: BackgroundTasks, fonction) -> dict:
 
 @app.post("/run-pipeline", status_code=202)
 def api_run_pipeline(background: BackgroundTasks):
-    """Appelé par n8n chaque lundi. Répond tout de suite : le run (plusieurs minutes) tourne en arrière-plan."""
+    """Appelé chaque lundi par un planificateur (cron). Répond tout de suite : le run (plusieurs minutes) tourne en arrière-plan."""
     return _lancer(background, run_pipeline)
 
 

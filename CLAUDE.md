@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Projet de portfolio : un agent IA traite 200 avis clients par semaine pour un gestionnaire de locations saisonnières, de la collecte à la publication, avec validation humaine. Le code, les prompts et la documentation sont en français.
 
-Ce qui compte le plus est la **mesure** (taux de retouche humaine, % automatisé, jeu de cas de test avec réponses attendues), pas la démo. La logique métier reste en Python testable ; n8n ne sert qu'à déclencher le pipeline.
+Ce qui compte le plus est la **mesure** (taux de retouche humaine, % automatisé, jeu de cas de test avec réponses attendues), pas la démo. La logique métier reste en Python testable ; un simple planificateur (cron) déclenche le pipeline par son API.
 
 `cdc-notes.md` contient le cadrage et les 12 décisions sur les zones grises du CDC (section 4). Sur ces points de comportement, il fait référence. Ses sections architecture et stack sont en partie dépassées : voir « Architecture » ci-dessous.
 
@@ -53,7 +53,7 @@ Deux systèmes séparés, chacun avec sa base SQLite :
 - **`agent/`** est le cœur du projet. `agent_internal.db` contient le détail du pipeline : table `avis` (état courant) et table `logs` (journal de chaque action).
 - **`admin/`** (Flask) lit et écrit directement `agent_internal.db`, et n'appelle le PMS par HTTP qu'après validation humaine, pour publier (`PATCH` puis `POST /publish` ; un nouvel essai tolère les 409 d'une étape déjà passée). Sur un rejet, il appelle `pipeline.regenerer()`. Un seul compte, mot de passe dans `ADMIN_MOT_DE_PASSE`. Pages : `/` (file de validation, plus les publications à refaire), `/revue` (doublons et hors-sujet : écarter, ou y répondre à la main), `/manuel`, `/tableau-de-bord`. Les chiffres du tableau de bord sont dans `admin/statistiques.py` (fonctions pures sur une liste d'avis). Il ajoute `agent/` à `sys.path` et lit `pipeline.engine` à chaque requête, ce que les tests remplacent.
 - **`eval/`** mesure une version de prompt sur un jeu de test annoté (`dataset.json`). Chaque réponse est contrôlée de deux façons : des règles mécaniques dans `metriques.py` (sans LLM : longueur, tutoiement, français, détail cité, mots interdits du cas) et un LLM juge dans `juge.py` (gpt-4o, température 0) pour les engagements risqués, l'aveu de faute et la contradiction entre note et texte. La grille du juge est versionnée dans `eval/prompts/` (`juge_v1.yaml`, avec la liste des critères), ses réglages et les règles sont dans `criteres.yaml`. Une réponse que le juge n'a pas pu juger est exclue du % sans défaut. `run_reel_v1.json` est une copie figée du premier test réel. Ses chiffres se comparent entre versions de prompt : le jeu est chargé en cas difficiles et ne représente pas un lot réel.
-- **`n8n/`** n'est pas encore écrit. n8n appelle `POST /run-pipeline` sur le port 8001.
+- **n8n** a été abandonné (journal du 2026-11-22) : n'importe quel planificateur (cron) appelle `POST /run-pipeline` sur le port 8001.
 
 Déroulement d'un run (`agent/pipeline.py`) : récupération des avis `en_attente_evaluation`, puis pour chacun, des plus anciens aux plus récents : garde-fous (`guardrails.evaluer_avis`), puis génération (`llm_client.generer_reponse`). L'agent ne modifie jamais le statut côté PMS : un avis déjà traité reste renvoyé par le PMS, et c'est `review_id_pms` dans `agent_internal.db` qui évite de le retraiter.
 
