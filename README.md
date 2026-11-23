@@ -6,7 +6,11 @@ Ce projet confie la rédaction à un agent IA. L'agent récupère les avis, éca
 
 Une démo ne prouve pas grand-chose ici. Ce que le projet montre, ce sont des **mesures** : un jeu de test annoté, un juge LLM, deux versions de prompt comparées, et un taux de retouche relevé sur un vrai lot.
 
-<!-- Démo : remplacer cette ligne par le GIF ou la vidéo, par exemple ![Démo](docs/demo.gif) -->
+
+
+https://github.com/user-attachments/assets/48d2f98e-21f9-43ab-9128-1fb7bbc3f1c8
+
+
 
 ## Résultats en bref
 
